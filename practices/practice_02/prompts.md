@@ -6,12 +6,12 @@
 
 | Техника | Файл эксперимента | Изменённый файл Практики 1 | Конкретное изменение | Проверка | Что отклонили |
 |---|---|---|---|---|---|
-| Few-shot | [`few_shot/experiment.md`](few_shot/experiment.md) |  |  |  |  |
-| R.C.T.F. | [`rctf/experiment.md`](rctf/experiment.md) |  |  |  |  |
-| Chain of Verification | [`chain_of_verification/experiment.md`](chain_of_verification/experiment.md) |  |  |  |  |
-| Tree of Thoughts | [`tree_of_thoughts/experiment.md`](tree_of_thoughts/experiment.md) |  |  |  |  |
-| RAG | [`rag/experiment.md`](rag/experiment.md) |  |  |  |  |
-| ReAct | [`react/experiment.md`](react/experiment.md) |  |  |  |  |
+| Few-shot | [`few_shot/experiment.md`](few_shot/experiment.md) | не изменяли (создана копия: `practices/practice_02/few_shot/tests_integration.md`) | Сохранена структура исходника; сценарии атомизированы; требования CASE отделены от решений/параметров; ожидания выровнены по OUT-1/API-1/REL-1/SEC-1; Evidence наблюдаемый и не нарушает OBS-1; ссылки указаны как относительные | Проверка: ссылки относительные валидны; сценарии не смешивают причины; новых требований нет | Отклонены объединённые сценарии и Evidence, требующий логирования содержимого diff/ответа модели |
+| R.C.T.F. | [`rctf/experiment.md`](rctf/experiment.md) | не менялся (Practice 1) | Улучшенная версия в Practice 2: уточнён план 3 инкрементов с DoD; таймаут/ошибки на уровне backend/LLM‑адаптера (не AI); SEC‑1 уточнён: разные форматы секретов и риск ложных пропусков | Сопоставлено с CASE.md; проверки OUT-1, API-1, REL-1, SEC-1, QA-1, OBS-1 | Учебные шаги (напр. P1-02), навязанные коды/форматы ошибок вне CASE.md |
+| Chain of Verification | [`chain_of_verification/experiment.md`](chain_of_verification/experiment.md) | не изменяли | Создали улучшенную копию исходного артефакта рядом с experiment.md: chain_of_verification/analysis.md; отделили требования CASE от предложений, уточнили OBS-1 («evidence отсутствует в diff»); структура сохранена; ссылки указаны | Соответствие требованиям CASE подтверждено ссылками; изменения ограничены явными неточностями; ссылки должны быть рабочими | Отклонены категоричные выводы без evidence и новые требования вне CASE.md |
+| Tree of Thoughts | [`tree_of_thoughts/experiment.md`](tree_of_thoughts/experiment.md) | не изменяли | На основе сравнения A/B/C создали улучшенную копию ADR рядом с экспериментом: [`tree_of_thoughts/adr.md`](tree_of_thoughts/adr.md) | Соответствие CASE.md; ссылки и структура сохранены; отделены требования от решений | Отклонены A (минимальный, нарушает SEC-1/REL-1) и B (перегруженный для кейса, риски OBS-1)
+| RAG | [`rag/experiment.md`](rag/experiment.md) | [`rag/tests_load.md`](rag/tests_load.md) | Копия tests_load.md с разделением: требования CASE (API-1/REL-1/OBS-1) vs предлагаемые параметры; явные пометки «неподтверждённое»; корректные относительные ссылки | Сопоставление строк в CASE.md (65–70), ADR (9–12), README (43) и tests_load.md | Профили RPS/время, p95/ошибки, «0% ошибок ≤20 000», условия запуска нагрузочного теста |
+| ReAct | [`react/experiment.md`](react/experiment.md) | [`react/product_management.md`](react/product_management.md) | Добавлен отдельный негативный сценарий таймаута LLM (REL-1) в acceptance criteria; структура сохранена, ссылки указаны | Сопоставлено с CASE.md (REL-1) и TO BE (analysis.md); не придумывались новые коды/форматы ошибок | Отклонены новые требования и детализация формата ошибки; без симуляции тестов |
 
 ## Независимое ревью
 
