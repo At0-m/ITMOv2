@@ -58,7 +58,7 @@ Feature: Review diff and return structured findings
     And отказ соответствует правилу REL-1
 ```
 
-Требования CASE.md, на которые опираются критерии: см. OUT-1, API-1, REL-1 в [CASE.md](../../practice_01/CASE.md).
+ Требования Context Pack, на которые опираются критерии: см. OUT-1, API-1, REL-1 в [context.md](../../practice_01/context.md); см. также ../../practice_01/README.md.
 
 ## Как использовали AI
 
