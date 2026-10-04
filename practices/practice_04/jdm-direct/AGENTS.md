@@ -6,8 +6,11 @@ docs/requirements.md
 
 Перед изменением продуктового поведения обязательно прочитай этот файл.
 
+Также перед изменением кода обязательно прочитай:
+docs/style-guide.md
+
 ## Current verification
-Единственная полноценная проверка на текущий момент — команда: `npm run build`.
+Полная проверка проекта выполняется командой: `sh scripts/check.sh`.
 
 ## Project entry point
 Основной entry point приложения: `src/main.ts`.
