@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>JDM Direct — Practice 4</title>
+    <style>
+      :root {
+        --bg: #0b0d0f;
+        --panel: #13161a;
+        --panel-2: #171b21;
+        --text: #e6e6e6;
+        --muted: #a7b0b8;
+        --accent: #e32727;
+        --accent-2: #ff3b3b;
+        --ok: #18c964;
+        --warn: #f2b01e;
+        --err: #ff5252;
+        --card-radius: 14px;
+        --container: 1180px;
+        --shadow: 0 10px 30px rgba(0,0,0,0.35);
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font: 16px/1.6 Inter, SF Pro Text, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+      a { color: var(--text); text-decoration: none; border-bottom: 1px solid rgba(227,39,39,0.35); }
+      a:hover { border-bottom-color: var(--accent); }
+      .container { max-width: var(--container); margin: 0 auto; padding: 24px; }
+      h1, h2, h3 { line-height: 1.25; margin: 0 0 10px; }
+      h1 { font-size: 40px; letter-spacing: 0.5px; }
+      h2 { font-size: 28px; margin-top: 10px; }
+      h3 { font-size: 20px; color: #fff; }
+      p { margin: 8px 0 0; color: var(--muted); }
+      .hero { background: radial-gradient(1200px 600px at 75% -100px, rgba(227,39,39,0.25), transparent 60%), linear-gradient(180deg, rgba(19,22,26,0.6), rgba(19,22,26,0.6)); border-bottom: 1px solid #1c2229; }
+      .hero-inner { display: grid; grid-template-columns: 1fr; gap: 18px; align-items: center; }
+      .hero-title { color: #fff; }
+      .subtitle { color: var(--muted); margin-top: 6px; }
+      .tagline { margin-top: 10px; color: #c9d1d9; }
+      .badge { display: inline-block; font-size: 12px; padding: 2px 8px; border: 1px solid #2a3138; border-radius: 999px; color: #aeb6bf; }
+      .accent { color: var(--accent); }
+      .grid { display: grid; gap: 16px; }
+      .grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .grid.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .section { padding: 28px 0; border-top: 1px solid #1c2229; }
+      .section:first-of-type { border-top: 0; }
+      .card { background: linear-gradient(180deg, var(--panel), var(--panel-2)); border: 1px solid #1e242b; border-radius: var(--card-radius); padding: 18px; box-shadow: var(--shadow); }
+      .card h3 { margin-bottom: 6px; }
+      .muted { color: var(--muted); }
+      .score { display: inline-block; margin-left: 8px; color: #cbd5df; }
+      .score.ok { color: var(--ok); }
+      .kpis { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 14px; }
+      .kpis .card { padding: 16px; }
+      .list { margin: 8px 0 0; padding-left: 18px; }
+      .list li { margin: 4px 0; color: var(--muted); }
+      .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #1b222a; border: 1px solid #242c35; color: #cbd5df; font-size: 12px; margin-right: 6px; }
+      .caps { text-transform: uppercase; letter-spacing: 0.12em; font-size: 12px; color: #9fb0bf; }
+      .timeline { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+      .timeline .stage { border-left: 3px solid var(--accent); padding-left: 12px; }
+      .timeline .stage.ok { border-left-color: var(--ok); }
+      figure { margin: 12px 0 0; }
+      figure > img { width: 100%; height: auto; display: block; background: #0f1317; border: 1px solid #222a32; border-radius: 10px; }
+      figcaption { font-size: 13px; color: #9fb0bf; margin-top: 6px; }
+      .media-row { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+      .media-col { display: grid; gap: 12px; }
+      .btn { display: inline-block; background: var(--accent); color: #fff; padding: 10px 14px; border-radius: 10px; border: 1px solid #a21717; box-shadow: 0 6px 18px rgba(227,39,39,0.25); transition: transform .06s ease; }
+      .btn:hover { transform: translateY(-1px); }
+      .note { font-size: 13px; color: #9fb0bf; margin-top: 8px; }
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; color: #d2dae3; }
+      .nowrap { white-space: nowrap; }
+      @media (max-width: 980px) {
+        .grid.cols-2, .grid.cols-3, .grid.cols-4, .kpis, .timeline, .media-row { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hero">
+      <div class="container hero-inner">
+        <div>
+          <div class="badge">Practice 4</div>
+          <h1 class="hero-title">JDM Direct — Practice 4</h1>
+          <p class="subtitle">Agentic workflow для разработки и проверки двух продуктовых фич.</p>
+          <p class="tagline">Продукт: лендинг сервиса покупки и импорта JDM‑автомобилей.</p>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="section">
+        <div class="container grid cols-2">
+          <div class="card">
+            <h3>Feature A — Input validation</h3>
+            <ul class="list">
+              <li>цена обязательна;</li>
+              <li>число > 0;</li>
+              <li>максимум 100000000 JPY;</li>
+              <li>при невалидном вводе сервис не вызывается.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Feature B — Dependency error handling</h3>
+            <ul class="list">
+              <li>async сервис расчёта;</li>
+              <li>timeout ожидания;</li>
+              <li>dependency error;</li>
+              <li>success/error отображаются пользователю;</li>
+              <li>поведение A сохранено.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <h2>Rubric Coverage</h2>
+          <div class="kpis">
+            <div class="card">
+              <div class="caps">A. Настроенная среда <span class="score ok">5 / 5 covered</span></div>
+              <ul class="list">
+                <li>AGENTS.md</li>
+                <li>Skill</li>
+                <li>MCP</li>
+                <li>Hook</li>
+                <li>Обоснование подключений</li>
+              </ul>
+            </div>
+            <div class="card">
+              <div class="caps">B. Skill: исследование <span class="score ok">2 / 2 covered</span></div>
+              <ul class="list">
+                <li>устройство skill</li>
+                <li>реальный запуск и проверенный результат</li>
+              </ul>
+            </div>
+            <div class="card">
+              <div class="caps">C. Собственный MCP <span class="score ok">2 / 2 covered</span></div>
+              <ul class="list">
+                <li>полезный tool</li>
+                <li>успешный вызов</li>
+                <li>ошибочный input</li>
+              </ul>
+            </div>
+            <div class="card">
+              <div class="caps">D. Reflection <span class="score ok">1 / 1 covered</span></div>
+              <ul class="list">
+                <li>конкретные наблюдения</li>
+              </ul>
+            </div>
+          </div>
+          <p class="note">Показано покрытие критериев рубрики, а не выставленная оценка.</p>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <h2>Environment — 5 Points</h2>
+          <div class="grid cols-2">
+            <div class="card">
+              <h3>AGENTS.md</h3>
+              <ul class="list">
+                <li>контракт: <span class="mono">docs/requirements.md</span>;</li>
+                <li>style guide;</li>
+                <li>полная проверка через <span class="mono">scripts/check.sh</span>;</li>
+                <li>запрет менять requirements / ослаблять проверки / commit без поручения.</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h3>Skill</h3>
+              <ul class="list">
+                <li><span class="mono">test-driven-development</span>;</li>
+                <li>локально: <span class="mono">.opencode/skills/test-driven-development/</span>;</li>
+                <li>реально читались <span class="mono">SKILL.md</span> и <span class="mono">writing-good-tests.md</span>.</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h3>Context7 MCP</h3>
+              <ul class="list">
+                <li>подключён в <a href="../opencode.json" class="mono">opencode.json</a>;</li>
+                <li>применён для Vitest и MCP TypeScript SDK.</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h3>Hook</h3>
+              <ul class="list">
+                <li><span class="mono">check-after-edit</span> — автоматически запускает <span class="mono">sh scripts/check.sh</span>;</li>
+                <li>реально был проверен через FAIL → PASS.</li>
+              </ul>
+              <div class="media-row">
+                <figure>
+                  <img src="evidence/01-hook-fail.png" alt="Hook: fail screenshot" />
+                  <figcaption>Hook: намеренно сломанный тест → FAIL</figcaption>
+                </figure>
+                <figure>
+                  <img src="evidence/02-hook-pass.png" alt="Hook: pass screenshot" />
+                  <figcaption>Hook: после восстановления → PASS</figcaption>
+                </figure>
+              </div>
+            </div>
+            <div class="card">
+              <h3>Обоснование</h3>
+              <ul class="list">
+                <li>AGENTS.md держит дисциплину: не менять требования и не ослаблять проверки.</li>
+                <li>TDD skill фиксирует порядок действий: сначала RED, потом минимальный GREEN.</li>
+                <li>Context7 MCP ускоряет проверку API внешних библиотек.</li>
+                <li>Hook даёт быстрый фидбек на каждое изменение.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <h2>Feature A + TDD</h2>
+          <div class="timeline">
+            <div class="card stage">
+              <div class="caps">RED</div>
+              <ul class="list">
+                <li>тесты написаны до реализации;</li>
+                <li>5 из 7 тестов упали;</li>
+                <li>падение связано с отсутствующей валидацией.</li>
+              </ul>
+            </div>
+            <div class="card stage ok">
+              <div class="caps">GREEN</div>
+              <ul class="list">
+                <li>после реализации: 7 / 7 passed.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="grid cols-2" style="margin-top:12px;">
+            <div class="card">
+              <h3>Граница</h3>
+              <ul class="list">
+                <li><span class="mono">100000000</span> JPY — допустимо;</li>
+                <li><span class="mono">100000001</span> JPY — ошибка.</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h3>Блокировка сервиса</h3>
+              <p>При невалидном input сервис расчёта не вызывается.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <h2>Feature B + Review</h2>
+          <div class="timeline">
+            <div class="card stage">
+              <div class="caps">RED</div>
+              <ul class="list">
+                <li>добавлены 4 новых теста;</li>
+                <li>они упали из-за отсутствующей <span class="mono">validateAndCalculateAsync</span>;</li>
+                <li>все 7 тестов Feature A оставались зелёными.</li>
+              </ul>
+            </div>
+            <div class="card stage ok">
+              <div class="caps">GREEN</div>
+              <ul class="list">
+                <li>после реализации: 11 / 11 passed.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="grid cols-2" style="margin-top:12px;">
+            <div class="card">
+              <h3>Review found a real gap</h3>
+              <p>Первая реализация Feature B проходила unit tests, но success / timeout / dependency error не были подключены к UI. Отдельный reviewer обнаружил это, замечание принято, UI исправлен. Повторный review подтвердил соответствие требованиям.</p>
+              <figure>
+                <img src="evidence/04-review-found-gap.png" alt="Отчёт о замечании reviewer" />
+                <figcaption>Review: найден разрыв observable UI behavior</figcaption>
+              </figure>
+            </div>
+            <div class="card">
+              <h3>Отдельный worktree</h3>
+              <p>Feature B делалась отдельно через <span class="mono">git worktree</span>.</p>
+              <figure>
+                <img src="evidence/03-worktree-created.png" alt="Создан отдельный worktree" />
+                <figcaption>Worktree: отдельная изоляция для Feature B</figcaption>
+              </figure>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <h2>Final Project Check</h2>
+          <p>Команда проверки: <span class="mono">sh scripts/check.sh</span></p>
+          <ul class="list">
+            <li>Feature A tests проходят;</li>
+            <li>Feature B tests проходят;</li>
+            <li>MCP unit tests проходят;</li>
+            <li>всего после добавления MCP: 16 / 16 tests passed;</li>
+            <li>production build проходит.</li>
+          </ul>
+          <figure>
+            <img src="evidence/07-final-check-16-tests.png" alt="Итоговая проверка: 16 тестов passed" />
+            <figcaption>Итоговая проверка: все тесты зелёные</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <h2>Skill Research — 2 Points</h2>
+          <div class="grid cols-2">
+            <div class="card">
+              <h3>Краткий разбор</h3>
+              <ul class="list">
+                <li>цикл: RED → GREEN → REFACTOR;</li>
+                <li>Feature A: RED 5/7 failed → GREEN 7/7;</li>
+                <li>Feature B: 4 новых теста failed, A 7/7 остаётся green;</li>
+                <li>после реализации: 11/11 green;</li>
+                <li>ограничение: unit TDD не гарантировал observable UI behavior (проявилось в первой версии Feature B).</li>
+              </ul>
+            </div>
+            <div class="card" style="display:flex;align-items:center;justify-content:center;">
+              <a class="btn" href="../docs/skill-research.md">Открыть полный Skill research</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <h2>Custom MCP — 2 Points</h2>
+          <div class="grid cols-2">
+            <div class="card">
+              <h3>jdm-tools / estimate_import_cost</h3>
+              <p>Назначение: демонстрационная оценка стоимости покупки и доставки JDM автомобиля. Расчёт демонстрационный, не реальный таможенный калькулятор.</p>
+              <p class="caps" style="margin-top:10px;">Формула</p>
+              <ul class="list">
+                <li><span class="mono">auctionFeeJpy = max(round(carPriceJpy * 0.05), 50000)</span></li>
+                <li><span class="mono">shippingJpy = 180000</span></li>
+                <li><span class="mono">totalJpy = carPriceJpy + auctionFeeJpy + shippingJpy</span></li>
+              </ul>
+              <p class="caps" style="margin-top:10px;">Successful tool call</p>
+              <pre class="card mono" style="white-space:pre-wrap; background:#0f1317;">Input:
+carPriceJpy = 2500000
+
+Result:
+carPriceJpy = 2500000
+auctionFeeJpy = 125000
+shippingJpy = 180000
+totalJpy = 2805000</pre>
+              <p class="caps" style="margin-top:10px;">Error call</p>
+              <pre class="card mono" style="white-space:pre-wrap; background:#0f1317;">Input:
+carPriceJpy = -1
+
+Result:
+Input validation error:
+carPriceJpy must be > 0</pre>
+              <p class="note">Валидация на границе MCP schema отклоняет невалидный input до выполнения расчёта.</p>
+              <p style="margin-top:8px;">
+                Код: 
+                <a href="../mcp/jdm-tools/server.ts" class="mono">server.ts</a> · 
+                <a href="../mcp/jdm-tools/estimateImportCost.ts" class="mono">estimateImportCost.ts</a> · 
+                <a href="../mcp/jdm-tools/estimateImportCost.test.ts" class="mono">estimateImportCost.test.ts</a>
+              </p>
+            </div>
+            <div class="card">
+              <div class="media-col">
+                <figure>
+                  <img src="evidence/05-mcp-success.png" alt="MCP: успешный вызов estimate_import_cost" />
+                  <figcaption>MCP: успешный вызов</figcaption>
+                </figure>
+                <figure>
+                  <img src="evidence/06-mcp-invalid-input.png" alt="MCP: ошибка валидации входа" />
+                  <figcaption>MCP: ошибка валидации входа</figcaption>
+                </figure>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <h2>Handoff / New Session</h2>
+          <ul class="list">
+            <li>после merge создан <a href="../docs/HANDOFF.md">docs/HANDOFF.md</a>;</li>
+            <li>новая сессия восстановила состояние A и B;</li>
+            <li>перечислила настроенную среду и команду <span class="mono">sh scripts/check.sh</span>;</li>
+            <li>самостоятельно запустила полную проверку.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <h2>Reflection — 1 Point</h2>
+          <div class="grid cols-3">
+            <div class="card">
+              <h3>Что помогло</h3>
+              <ul class="list">
+                <li>AGENTS + TDD + hook;</li>
+                <li>Context7;</li>
+                <li>reviewer;</li>
+                <li>HANDOFF.</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h3>Где пришлось вмешаться</h3>
+              <ul class="list">
+                <li>несовпадение OpenCode CLI с командами презентации;</li>
+                <li>временная инструкция «не реализуй A/B» осталась в requirements;</li>
+                <li>reviewer обнаружил отсутствие UI‑интеграции Feature B;</li>
+                <li>worktree в монорепозитории создавал копию всего repo.</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h3>Что изменил бы</h3>
+              <ul class="list">
+                <li>заранее сверил версии CLI;</li>
+                <li>лучше организовал worktree;</li>
+                <li>раньше добавил бы browser/E2E проверки UI.</li>
+              </ul>
+            </div>
+          </div>
+          <div style="margin-top:12px;">
+            <a class="btn" href="../reflection.md">Открыть полную рефлексию</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <h2>Artifacts</h2>
+          <ul class="list">
+            <li><a href="../AGENTS.md">../AGENTS.md</a></li>
+            <li><a href="../docs/requirements.md">../docs/requirements.md</a></li>
+            <li><a href="../docs/style-guide.md">../docs/style-guide.md</a></li>
+            <li><a href="../docs/HANDOFF.md">../docs/HANDOFF.md</a></li>
+            <li><a href="../docs/skill-research.md">../docs/skill-research.md</a></li>
+            <li><a href="../reflection.md">../reflection.md</a></li>
+            <li><a href="../scripts/check.sh">../scripts/check.sh</a></li>
+            <li><a href="../opencode.json">../opencode.json</a></li>
+            <li><a href="../.opencode/skills/test-driven-development/SKILL.md">../.opencode/skills/test-driven-development/SKILL.md</a></li>
+            <li><a href="../.opencode/plugins/check-after-edit.js">../.opencode/plugins/check-after-edit.js</a></li>
+            <li><a href="../mcp/jdm-tools/server.ts">../mcp/jdm-tools/server.ts</a></li>
+            <li><a href="../mcp/jdm-tools/estimateImportCost.ts">../mcp/jdm-tools/estimateImportCost.ts</a></li>
+            <li><a href="../mcp/jdm-tools/estimateImportCost.test.ts">../mcp/jdm-tools/estimateImportCost.test.ts</a></li>
+          </ul>
+        </div>
+      </section>
+    </main>
+  </body>
+  </html>
