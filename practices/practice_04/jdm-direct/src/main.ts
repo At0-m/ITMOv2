@@ -3,7 +3,7 @@ import heroImg from './assets/hero.png'
 import typescriptLogo from './assets/typescript.svg'
 import viteLogo from './assets/vite.svg'
 import { setupCounter } from './counter.ts'
-import { validateAndCalculate } from './priceValidation'
+import { validateAndCalculateAsync } from './priceValidation'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 <section id="center">
@@ -58,38 +58,58 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 <section id="spacer"></section>
  
  <div class="ticks"></div>
- <section id="calc">
-   <h2>Стоимость авто (JPY)</h2>
-   <form id="calc-form">
-     <label>
-       Цена JPY
-       <input id="price-input" name="price" type="number" inputmode="numeric" min="1" max="100000000" step="1" />
-     </label>
-     <div id="price-error" style="color:#b00020; min-height:1.2em;"></div>
-     <button type="submit">Рассчитать</button>
-   </form>
- </section>
+  <section id="calc">
+    <h2>Стоимость авто (JPY)</h2>
+    <form id="calc-form">
+      <label>
+        Цена JPY
+        <input id="price-input" name="price" type="number" inputmode="numeric" min="1" max="100000000" step="1" />
+      </label>
+      <div id="price-error" style="color:#b00020; min-height:1.2em;"></div>
+      <div id="price-result" style="min-height:1.2em;"></div>
+      <button type="submit">Рассчитать</button>
+    </form>
+  </section>
 `
 
 setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
 
-// Minimal local calculation service to demonstrate invocation
-function mockCalcService(price: number) {
-  // no-op, could return something in future features
-  return { ok: true, price }
+// Minimal local async calculation service to demonstrate invocation
+// Returns a demo result after a short delay
+async function mockCalcServiceAsync(price: number) {
+  return new Promise<{ total: number }>((resolve) => {
+    // simulate small network/service latency
+    setTimeout(() => resolve({ total: Math.round(price * 1.1) }), 200)
+  })
 }
 
 const form = document.getElementById('calc-form') as HTMLFormElement
 const priceInput = document.getElementById('price-input') as HTMLInputElement
 const errorEl = document.getElementById('price-error') as HTMLDivElement
+const resultEl = document.getElementById('price-result') as HTMLDivElement
+const submitBtn = (document.querySelector('#calc-form button[type="submit"]') as HTMLButtonElement)
 
-form?.addEventListener('submit', (e) => {
+form?.addEventListener('submit', async (e) => {
   e.preventDefault()
   const raw = priceInput.value
-  const result = validateAndCalculate(raw, mockCalcService)
-  if (result.error) {
-    errorEl.textContent = result.error
-  } else {
-    errorEl.textContent = ''
+
+  // UI loading state
+  submitBtn.disabled = true
+  resultEl.textContent = 'Расчёт...'
+  errorEl.textContent = ''
+
+  try {
+    const res = await validateAndCalculateAsync(raw, mockCalcServiceAsync, { timeoutMs: 800 })
+    if ('ok' in res && res.ok) {
+      // success: clear error, show result
+      errorEl.textContent = ''
+      resultEl.textContent = `Итоговая стоимость: ${JSON.stringify(res.result)}`
+    } else {
+      // error: show domain-provided message
+      errorEl.textContent = res.error
+      resultEl.textContent = ''
+    }
+  } finally {
+    submitBtn.disabled = false
   }
 })
