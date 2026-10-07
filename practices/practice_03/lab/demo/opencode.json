@@ -11,28 +11,60 @@
       },
       "models": {
         "itmo-agent": {
-          "name": "ITMO local 64k",
+          "name": "ITMO local",
           "limit": {
-            "context": 65536,
-            "output": 4096
+            "context": 4096,
+            "output": 1024
           }
         }
       }
     }
   },
+  "enabled_providers": ["ollama"],
+  "share": "disabled",
   "agent": {
     "local-guide": {
       "description": "Read-only local repository assistant",
       "mode": "primary",
       "prompt": "{file:./repo-system.txt}",
-      "steps": 8,
+      "steps": 6,
       "permission": {
         "*": "deny",
         "read": "allow",
         "glob": "allow",
         "grep": "allow"
-      }
+      },
+      "share": false
+    },
+    "local-guide-a": {
+      "description": "Read-only local repository assistant",
+      "mode": "primary",
+      "prompt": "{file:../ab/system-a.txt}",
+      "steps": 8,
+      "temperature": 0.2,
+      "options": { "seed": 42 },
+      "permission": {
+        "*": "deny",
+        "read": "allow",
+        "grep": "allow",
+        "external_directory": "deny"
+      },
+      "share": false
+    },
+    "local-guide-b": {
+      "description": "Read-only local repository assistant",
+      "mode": "primary",
+      "prompt": "{file:../ab/system-b.txt}",
+      "steps": 8,
+      "temperature": 0.2,
+      "options": { "seed": 42 },
+      "permission": {
+        "*": "deny",
+        "read": "allow",
+        "grep": "allow",
+        "external_directory": "deny"
+      },
+      "share": false
     }
   }
 }
-
