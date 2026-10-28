@@ -1,50 +1,82 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report
+Version: 1.0.0 → 2.0.0
+Modified principles:
+  Validation & Contract First → Specification Before Implementation;
+  Test-First Workflow → Verification Is Mandatory;
+  Separation of Concerns → UI / Logic Separation;
+  Observability & Error Transparency → Evidence;
+  Simplicity & Stack Discipline → Scope Discipline
+Added sections: Contract-First Integration; Backward Compatibility; Human Decision Points
+Removed sections: Additional Constraints; Development Workflow and Quality Gates (merged under Governance)
+Follow-up TODOs: TODO(RATIFICATION_DATE): set the original adoption date
+-->
+
+# JDM Direct Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### Specification Before Implementation (NON-NEGOTIABLE)
+- New functionality MUST begin with a written specification capturing behavior, boundaries,
+  errors, and acceptance criteria.
+- No implementation may start until specifications and contracts are reviewed and agreed.
+Rationale: Aligns stakeholders, reduces rework, and prevents contract drift.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### UI / Logic Separation
+- Frontend remains Vite + TypeScript. Server-side business logic for coursework resides in Go.
+- UI MUST NOT duplicate server business rules.
+- Frontend/Backend interaction uses explicit HTTP/JSON contracts.
+Rationale: Preserves clear boundaries, improves testability, and enforces single source of truth.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### Contract-First Integration
+- Before integration, define and agree request/response data, HTTP methods, status codes,
+  validation errors, and loading/error/success states.
+- Undocumented assumptions between frontend and backend are forbidden.
+Rationale: Prevents integration debt and inconsistent behavior.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### Backward Compatibility
+- Existing behaviors MUST be preserved: calculator Feature A, calculator Feature B,
+  Featured budget filter, and public UI scenarios.
+- New features MUST NOT break these scenarios.
+Rationale: Protects users and existing flows in this brownfield project.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### Verification Is Mandatory
+- For TypeScript portion, the primary project check is `sh scripts/check.sh`.
+- When Go backend exists, Go unit and integration tests MUST run.
+- Changes are accepted only after verifying happy path, error path, and boundary cases.
+- Green unit tests do not replace observable UI or end-to-end acceptance.
+Rationale: Ensures correctness beyond unit scope.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+### Scope Discipline
+- Do not add dependencies, frameworks, or infrastructure without necessity.
+- Do not expand feature scope during implementation without a decision/spec update.
+- Do not change existing calculator or budget filter for convenience of a new feature.
+Rationale: Controls risk and maintains focus.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### Human Decision Points
+- Ambiguous product decisions and shared contract changes MUST be explicitly approved by a human
+  before implementation.
+- Reviewer findings are not auto-applied; a human accept/reject decision is required.
+Rationale: Keeps governance accountable and explicit.
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
-
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### Evidence
+- For coursework, retain specs, shared contracts, automated check results, and a concise demo/evidence.
+- Specs MUST exist before corresponding production code.
+Rationale: Provides traceability and learning artifacts.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+- This constitution governs long-lived engineering rules for JDM Direct and supersedes other
+  practices on governance topics when conflicts arise.
+- Amendments require a short proposal capturing rationale, impact, and migration plan when needed.
+- Versioning follows semantic rules:
+  MAJOR for breaking governance changes; MINOR for new or materially expanded guidance; PATCH
+  for clarifications.
+- Ratification: The human project owner approves governance changes. Record review notes in PRs.
+- Compliance: reviewers MUST verify adherence to this constitution, docs/style-guide.md,
+  and docs/requirements.md. Deviations MUST include explicit justification.
+- Verification gates: `sh scripts/check.sh` is mandatory for TypeScript; when Go backend exists,
+  Go unit/integration tests MUST be included in CI.
+Rationale: Keeps governance actionable and integrated with existing checks.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 2.0.0 | **Ratified**: 2026-10-28 | **Last Amended**: 2026-10-28
