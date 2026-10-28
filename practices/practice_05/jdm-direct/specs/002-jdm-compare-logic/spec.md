@@ -8,6 +8,14 @@
 
 **Input**: User description: "TEAM LOGIC — JDM Compare: backend/domain/API requirements to compare two Featured JDM cars and provide deterministic import cost estimates per car. Production code/tests unchanged; no Go code now; separate UI team/spec; do not change existing frontend features."
 
+## Clarifications
+
+### Session 2026-10-28
+
+- Q: Which rounding rule should be applied to the 5% auction fee so that the monetary outputs are integer JPY? → A: Round half up to the nearest JPY
+- Q: How should validation errors be reported when multiple problems exist in a compare request? → A: First error only
+- Q: Should the compare result be atomic (any single-car error fails the whole compare) or allow partial success (return results for valid cars and an error for the invalid one)? → A: Atomic (any error fails whole compare)
+
 ## User Scenarios & Testing (mandatory)
 
 ### User Story 1 - Compare Two Featured Cars (Priority: P1)
@@ -16,11 +24,11 @@ As a user, I want to compare exactly two cars from the Featured JDM catalog and 
 
 **Why this priority**: This is the core business goal for the homework practice.
 
-**Independent Test**: Provide two valid, distinct car IDs (e.g., `r34`, `suprak`). Verify two estimates are returned, each with purchase price, auction fee, shipping, and total, computed via the defined rules.
+**Independent Test**: Provide two valid, distinct car IDs (e.g., `r34`, `supra`). Verify two estimates are returned, each with purchase price, auction fee, shipping, and total, computed via the defined rules.
 
 **Acceptance Scenarios**:
 
-1. Given two valid distinct IDs `r34` and `suprak`, When a compare request is sent, Then the response contains two result entries, one for `r34` and one for `suprak`, each with correctly computed fields and integer JPY values.
+1. Given two valid distinct IDs `r34` and `supra`, When a compare request is sent, Then the response contains two result entries, one for `r34` and one for `supra`, each with correctly computed fields and integer JPY values.
 2. Given the same valid compare request repeated, When executed again, Then the response values are identical to the prior response (deterministic).
 
 ---
@@ -69,7 +77,9 @@ As a user or tester, I expect all monetary outputs to be integers in JPY and the
 
 ### Domain Behavior
 
-- The logic accepts a compare request containing exactly two distinct car identifiers referencing Featured JDM demo catalog entries.
+- The logic accepts a single batched compare request containing exactly two distinct car identifiers referencing Featured JDM demo catalog entries.
+- Request endpoint: POST /api/compare.
+- Request body: { "carIds": ["r34", "supra"] } with exactly two distinct IDs; input order is significant and must be preserved in results.
 - The logic validates input before any calculation.
 - On success, it returns a result per input car with computed import estimate fields.
 - Determinism: the same valid input yields the same outputs.
@@ -80,7 +90,7 @@ As a user or tester, I expect all monetary outputs to be integers in JPY and the
 
 - Demo catalog is static and deterministic for homework purposes with three entries:
   - r34: purchasePriceJpy=5,800,000; drivetrain=AWD; engine=RB26DETT
-  - suprak: purchasePriceJpy=4,200,000; drivetrain=RWD; engine=2JZ-GTE
+  - supra: purchasePriceJpy=4,200,000; drivetrain=RWD; engine=2JZ-GTE
   - rx7: purchasePriceJpy=3,100,000; drivetrain=RWD; engine=13B-REW
 - Required fields for calculation per car:
   - `id` (string)
@@ -101,7 +111,8 @@ Validation behavior:
 
 - Do not call calculation logic if validation fails.
 - Provide clear error semantics describing the problem.
-- If multiple validation problems exist, the service may report the first encountered or aggregate; aggregation vs single-first is a contract question for UI. [NEEDS CLARIFICATION: Should validation errors be aggregated (all problems) or first-error only?]
+ - If multiple validation problems exist, report the first encountered validation error only; do not aggregate multiple errors in a single response.
+ - Priority for first-error-only policy: (1) Malformed request; (2) Wrong car count; (3) Duplicate IDs; (4) Unknown ID.
 
 ### Calculation Rules
 
@@ -111,26 +122,52 @@ For each valid car:
 - shippingJpy = 180,000
 - totalImportJpy = purchasePriceJpy + auctionFeeJpy + shippingJpy
 - All monetary values are integers in JPY.
-- Rounding: [NEEDS CLARIFICATION: Which rounding rule to apply to 5% fee? Options include round half up to nearest JPY, floor (truncate), or ceil.]
+ - Rounding: auctionFeeJpy is calculated as 5% of purchasePriceJpy and rounded half up to the nearest JPY.
 
 ### Success Semantics
 
-On successful validation and computation, return, for each input car, at minimum:
+On successful validation and computation, the response is HTTP 200 with the following envelope, preserving input order:
 
-- car id
-- purchasePriceJpy
-- auctionFeeJpy
-- shippingJpy
-- totalImportJpy
+{
+  "results": [
+    {
+      "carId": "r34",
+      "purchasePriceJpy": 5800000,
+      "auctionFeeJpy": 290000,
+      "shippingJpy": 180000,
+      "totalImportJpy": 6270000
+    },
+    {
+      "carId": "supra",
+      "purchasePriceJpy": 4200000,
+      "auctionFeeJpy": 210000,
+      "shippingJpy": 180000,
+      "totalImportJpy": 4590000
+    }
+  ]
+}
 
-The mapping between each input car and its calculation must be preserved. Output ordering should be predictable. [Assumption] Results are returned in the same order as the input IDs unless otherwise agreed.
+Atomic success: success always contains both results; no partial success.
 
 ### Error Semantics
 
 - Errors are returned for validation failures and for request malformation.
 - Domain-level errors should be clearly distinguishable from transport-level issues.
-- Suggested error fields (subject to contract): `code` (stable machine-readable), `message` (human-readable), and optionally `details` (structured context such as which ID failed).
-- Atomicity: [NEEDS CLARIFICATION: Should compare be atomic (any single-car error fails the whole compare) or allow partial success (return results for valid cars and errors for invalid ones)?]
+- Error envelope:
+
+{
+  "error": {
+    "code": "...",
+    "message": "..."
+  }
+}
+
+- Required error codes and HTTP mapping:
+  - 400: MALFORMED_REQUEST, WRONG_CAR_COUNT, DUPLICATE_CAR_IDS
+  - 404: CAR_NOT_FOUND
+  - 500: INTERNAL_ERROR
+- UI consumes machine-readable `code`; `message` is human-readable.
+- Atomicity: The compare operation is atomic. Any single validation or per-car error causes the entire compare to fail; no partial results are returned.
 
 ### Determinism & Boundaries
 
@@ -140,6 +177,7 @@ The mapping between each input car and its calculation must be preserved. Output
 - No database requirement for homework; in-memory demo dataset is sufficient.
 - Validation-before-calculation is mandatory.
 - No changes to existing UI business rules (calculator Feature A/B, Featured budget filter).
+ - Results preserve the input order of `carIds`.
 
 ### Non-Functional Requirements
 
@@ -155,7 +193,7 @@ The mapping between each input car and its calculation must be preserved. Output
 - FR-004: The system must produce integer JPY values for all monetary fields.
 - FR-005: The system must preserve the mapping of input cars to their corresponding results and provide a predictable output order.
 - FR-006: The system must be deterministic—identical valid requests yield identical results.
-- FR-007: The system must return clear error semantics with stable codes and human-readable messages suitable for UI consumption. [NEEDS CLARIFICATION: exact error shape and coding scheme]
+- FR-007: The system must return clear error semantics using the agreed error envelope with stable codes and human-readable messages suitable for UI consumption.
 
 ### Key Entities
 
@@ -172,7 +210,7 @@ The mapping between each input car and its calculation must be preserved. Output
 - SC-002: 100% of repeated identical valid requests produce identical outputs.
 - SC-003: 100% of monetary outputs are integers in JPY; no fractional values appear.
 - SC-004: Validation prevents calculation on all invalid requests (measured in tests covering all specified error cases).
-- SC-005: Happy path scenarios `r34 + suprak` and any other pair from the demo catalog return correct totals per the formulas.
+ - SC-005: Happy path scenarios `r34 + supra` and any other pair from the demo catalog return correct totals per the formulas.
 
 ## Assumptions
 
@@ -180,16 +218,17 @@ The mapping between each input car and its calculation must be preserved. Output
 - Results are returned in the same order as input IDs to simplify UI mapping unless UI specifies otherwise.
 - No persistence or history is required.
 - No authentication or authorization is required.
-- No endpoint path, HTTP method, status codes, or JSON envelope are fixed yet—these require UI contract alignment.
+ - Endpoint, HTTP method, status codes, request/success/error envelopes are fixed by docs/homework5/common-contract.md. POST /api/compare.
 
 ## Acceptance / Test Scenarios
 
 Happy path:
-- HP-001: Compare `r34` + `suprak` returns two correct estimates with correct fields and totals.
+- HP-001: Compare `r34` + `supra` returns two correct estimates with correct fields and totals.
 
 Boundary:
-- B-001: Monetary rounding rule is applied consistently to produce integer `auctionFeeJpy` and totals.
+ - B-001: Monetary rounding rule (round half up to nearest JPY) is applied consistently to produce integer `auctionFeeJpy` and totals.
 - B-002: Output order is consistent with input order (given the assumption).
+ - B-003: Round-half-up boundary example (demonstration only; not a new catalog entry): Given a calculation input with purchasePriceJpy = 1000010, When auction fee is computed as 5% (50000.5) and rounded half up, Then auctionFeeJpy = 50001, shippingJpy = 180000, and totalImportJpy = 1230011 (1000010 + 50001 + 180000).
 
 Error:
 - E-001: Unknown ID -> error referencing the unknown ID; no calculation performed.
@@ -197,6 +236,8 @@ Error:
 - E-003: Wrong number of IDs (<2) -> error indicating exactly two IDs are required.
 - E-004: Wrong number of IDs (>2) -> error indicating exactly two IDs are required.
 - E-005: Malformed request -> error indicating malformed payload.
+- E-006: Multiple validation issues in one request -> only the first encountered validation error is returned; no aggregation.
+ - E-007: Mixed valid/invalid IDs -> the request fails atomically; no results are returned and only the first encountered validation error is reported.
 
 Regression:
 - R-001: Existing frontend calculator Features A/B and Featured budget filter do not require changes to their business rules as a result of this backend logic feature.
@@ -215,16 +256,6 @@ Regression:
 
 ## Needs from Team UI / Open Contract Questions
 
-The following items require UI team agreement. Decisions here directly impact the shared contract. Until resolved, defaults/assumptions are documented above and [NEEDS CLARIFICATION] markers are placed on critical items.
-
-1) Request pattern: [NEEDS CLARIFICATION] Does the UI send two car IDs in a single request, or perform two independent per-car estimates followed by client-side combine?
-
-2) Atomicity vs Partial Success: [NEEDS CLARIFICATION] Should compare fail entirely if any one car is invalid (atomic), or return partial results with per-car errors (partial success)?
-
-3) Error shape and coding: [NEEDS CLARIFICATION] Preferred error payload shape (fields, localization readiness) and whether stable machine-readable codes are required for all error types.
-
-Additional alignment topics (non-blocking unless UI requests changes):
-- Output order vs input order guarantees
-- Whether backend should also return car title/specs alongside monetary fields
-- Any loading/retry expectations and how UI maps errors to the display
-- Whether validation should report first error or aggregate multiple errors
+Open Questions: None
+Blocking clarifications: None
+Logic spec aligned with common-contract.md
