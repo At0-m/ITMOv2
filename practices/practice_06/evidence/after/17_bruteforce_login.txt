@@ -1,0 +1,24 @@
+=== S-04/D-06: brute-force login + lockout threshold (after fix) ===
+Method: direct Shop().dispatch() call against a fresh Shop instance (same
+dispatch() code path the HTTP handler calls; isolated here so this test does
+not consume login attempts against the live evidence-collection server used
+for the rest of this pass). FAILED_LOGIN_LIMIT = 5 in service.py.
+
+NOTE / residual limitation found during this check: once an account hits the
+limit, there is currently no automatic reset or TTL - even the *correct*
+password is rejected with 429 until the Shop() process restarts (counters
+are in-memory, per-process). This is a genuine trade-off introduced by the
+fix, not a reintroduced vulnerability: it stops credential brute-forcing, but
+a malicious actor who knows a username can use the same 5 wrong attempts to
+lock out that *specific* legitimate user until the process restarts. This is
+reported honestly in REPORT_02 as a remaining limitation, not hidden.
+
+attempt 1 (wrong password) -> HTTP 401 {'error': 'invalid credentials'}
+attempt 2 (wrong password) -> HTTP 401 {'error': 'invalid credentials'}
+attempt 3 (wrong password) -> HTTP 401 {'error': 'invalid credentials'}
+attempt 4 (wrong password) -> HTTP 401 {'error': 'invalid credentials'}
+attempt 5 (wrong password) -> HTTP 401 {'error': 'invalid credentials'}
+attempt 6 (wrong password) -> HTTP 429 {'error': 'too many attempts, try again later'}
+attempt 7 (wrong password) -> HTTP 429 {'error': 'too many attempts, try again later'}
+correct password right after lockout -> HTTP 429 {'error': 'too many attempts, try again later'}
+bob login while alice is locked -> HTTP 200 {'token': 'bc9c38474eb3498988e451b0247729c4'}

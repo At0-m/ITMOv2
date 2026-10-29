@@ -1,0 +1,51 @@
+=== Final-stage fixes: strict /assistant/execute schema, bounded failed_logins, richer audit trail (live server, 127.0.0.1:8067) ===
+Tokens are not printed. Server started from lab/service.py after the fixes.
+
+### 1. /assistant/execute schema (expect 400 for bad input, 200 for valid)
+-- extra decision field (alice)
+HTTP 400 {"error": "invalid decision"}
+
+-- extra argument field (alice)
+HTTP 400 {"error": "invalid decision"}
+
+-- path is a list (alice)
+HTTP 400 {"error": "invalid decision"}
+
+-- path is a number (staff)
+HTTP 400 {"error": "invalid decision"}
+
+-- export_profiles with arguments (staff)
+HTTP 400 {"error": "invalid decision"}
+
+-- delete_tree with extra field (staff)
+HTTP 400 {"error": "invalid decision"}
+
+-- delete_tree normal (staff) -> still 403
+HTTP 403 {"error": "destructive tool disabled"}
+
+-- VALID read_file (alice) -> own receipt
+HTTP 200 {"content": "TEST_ALICE receipt: chair, 5000 RUB"}
+
+-- VALID export_profiles (staff)
+HTTP 200 [{"id": 1, "name": "TEST_ALICE", "email": "alice@example.invalid", "address": "TEST_ADDRESS_A"}, {"id": 2, "name": "TEST
+
+
+-- files still present after all attempts:
+{"content": "TEST_ALICE receipt: chair, 5000 RUB"}
+
+### 2. failed_logins growth: 300 logins with unique unknown usernames
+    300 401
+(memory bound verified by unit tests: shop.failed_logins == {} after 2000 unknown names; see test_security.FailedLoginMemoryTests)
+
+### 3. known user lockout unchanged (5x401 then 429), recovery after 30s checked in section 4 below
+bad attempt 401
+bad attempt 401
+bad attempt 401
+bad attempt 401
+bad attempt 401
+{"error": "too many attempts, try again later"} HTTP 429
+20:33:09
+
+### 4. after >30s wait: correct password works again
+20:33:41
+bob login after wait: HTTP 200

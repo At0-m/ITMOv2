@@ -1,0 +1,27 @@
+=== S-04/D-06 follow-up: time-limited lockout, verified against the LIVE HTTP server (not the direct dispatch test) ===
+LOGIN_LOCKOUT_SECONDS = 30 (see lab/service.py)
+
+-- 5 wrong passwords for alice --
+attempt 1 -> HTTP 401
+attempt 2 -> HTTP 401
+attempt 3 -> HTTP 401
+attempt 4 -> HTTP 401
+attempt 5 -> HTTP 401
+-- correct password immediately after lockout (expect 429) --
+HTTP/1.0 429 Too Many Requests
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 18:56:52 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 47
+
+{"error": "too many attempts, try again later"}
+18:56:52
+-- correct password after waiting >LOGIN_LOCKOUT_SECONDS (30s) (expect 200, token issued) --
+HTTP/1.0 200 OK
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 18:58:00 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 45
+
+{"token": "2e178f5665974bd0bf73c1d435619e00"}
+18:58:00
