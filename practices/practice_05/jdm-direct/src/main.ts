@@ -2,6 +2,18 @@ import './style.css'
 import heroImg from './assets/hero.png'
 import { validateAndCalculateAsync } from './priceValidation'
 import { validateBudget, filterCarsByBudget, mapBudgetErrorToMessage } from './featuredFilter'
+import {
+  initialSelection,
+  toggleSelection,
+  resetSelection,
+  isSelected,
+  canCompare,
+  hiddenSelectedIds,
+  selectedPair,
+  MAX_SELECTED,
+  type SelectionState,
+} from './compareSelection'
+import { compareCars, mapCompareErrorToMessage, type CompareItem } from './compareApi'
 
 // Build landing page UI
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
@@ -52,6 +64,39 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
         <div id="featured-empty" class="empty-state" style="display:none; margin: 12px 0;">По вашему бюджету ничего не найдено</div>
 
         <div id="featured-grid" class="card-grid"></div>
+
+        <section id="compare-panel" class="compare-panel" aria-labelledby="compare-panel-title" aria-busy="false" hidden>
+          <h3 id="compare-panel-title" class="compare-panel-title"><span class="jp-label" lang="ja">比較</span> Сравнение импорта</h3>
+          <div id="compare-loading" class="compare-loading" role="status" aria-live="polite" hidden>
+            <span class="compare-spinner" aria-hidden="true"></span>
+            <span>Выполняется расчёт стоимости импорта</span>
+          </div>
+          <div id="compare-error" class="compare-error" role="alert" aria-live="assertive" hidden>
+            <p id="compare-error-text" class="compare-error-text"></p>
+            <button type="button" id="compare-retry" class="btn btn-secondary">Повторить расчёт</button>
+          </div>
+          <div id="compare-result" class="compare-result" hidden></div>
+        </section>
+
+        <div id="compare-tray" class="compare-tray" role="region" aria-label="Панель сравнения автомобилей" hidden>
+          <div class="tray-main">
+            <div class="tray-counter" aria-label="Выбрано автомобилей">
+              <span class="tray-counter-label" lang="ja">選択</span>
+              <span id="compare-counter" class="tray-counter-value">0 / 2</span>
+            </div>
+            <ul id="compare-slots" class="tray-slots" aria-label="Выбранные автомобили"></ul>
+            <div class="tray-actions">
+              <button type="button" id="compare-submit" class="btn btn-primary" aria-describedby="compare-hint">Сравнить 2 автомобиля</button>
+              <button type="button" id="compare-reset" class="btn btn-ghost">Сбросить сравнение</button>
+            </div>
+          </div>
+          <p id="compare-hint" class="tray-hint">Выберите два автомобиля для сравнения</p>
+          <div id="compare-hidden-notice" class="tray-notice" hidden>
+            <span id="compare-hidden-text"></span>
+            <button type="button" id="compare-hidden-reset" class="btn btn-ghost btn-sm">Сбросить фильтр</button>
+          </div>
+          <p id="compare-feedback" class="tray-feedback" role="status" aria-live="polite"></p>
+        </div>
       </div>
     </section>
 
@@ -190,12 +235,12 @@ form?.addEventListener('submit', async (e) => {
 })
 
 // Featured catalog budget filtering (client-side)
-type FeaturedCar = { id: string; title: string; meta: string; img: string; priceJpy: number }
+type FeaturedCar = { id: string; title: string; meta: string; engine: string; drivetrain: string; img: string; priceJpy: number }
 
 const FEATURED_CARS: FeaturedCar[] = [
-  { id: 'r34', title: 'Nissan Skyline GT-R', meta: 'R34 • AWD • RB26DETT', img: '/cars/skyline-r34.jpg', priceJpy: 5_800_000 },
-  { id: 'supra', title: 'Toyota Supra', meta: 'A80 • RWD • 2JZ-GTE', img: '/cars/supra-a80.jpg', priceJpy: 4_200_000 },
-  { id: 'rx7', title: 'Mazda RX-7', meta: 'FD3S • RWD • 13B-REW', img: '/cars/rx7-fd.jpg', priceJpy: 3_100_000 },
+  { id: 'r34', title: 'Nissan Skyline GT-R', meta: 'R34 • AWD • RB26DETT', engine: 'RB26DETT', drivetrain: 'AWD', img: '/cars/skyline-r34.jpg', priceJpy: 5_800_000 },
+  { id: 'supra', title: 'Toyota Supra', meta: 'A80 • RWD • 2JZ-GTE', engine: '2JZ-GTE', drivetrain: 'RWD', img: '/cars/supra-a80.jpg', priceJpy: 4_200_000 },
+  { id: 'rx7', title: 'Mazda RX-7', meta: 'FD3S • RWD • 13B-REW', engine: '13B-REW', drivetrain: 'RWD', img: '/cars/rx7-fd.jpg', priceJpy: 3_100_000 },
 ]
 
 const featuredGrid = document.getElementById('featured-grid') as HTMLDivElement
@@ -214,18 +259,187 @@ function renderFeatured(list: FeaturedCar[]): void {
   featuredGrid.innerHTML = list
     .map(
       (c) => `
-      <article class="car-card">
+      <article class="car-card${isSelected(selection, c.id) ? ' is-selected' : ''}" data-car-id="${c.id}">
         <div class="card-media">
           <img src="${c.img}" alt="${c.title}" />
         </div>
         <h3 class="card-title">${c.title}</h3>
         <p class="card-meta">${c.meta}</p>
         <p class="card-price">${formatJpy(c.priceJpy)}</p>
+        <button type="button" class="select-btn" data-select-id="${c.id}"></button>
       </article>
     `,
     )
     .join('')
+  syncCardSelection()
+  updateTray()
 }
+
+// ---- Compare: selection, tray, request lifecycle ----
+
+const comparePanel = document.getElementById('compare-panel') as HTMLElement
+const compareLoading = document.getElementById('compare-loading') as HTMLDivElement
+const compareError = document.getElementById('compare-error') as HTMLDivElement
+const compareErrorText = document.getElementById('compare-error-text') as HTMLParagraphElement
+const compareRetryBtn = document.getElementById('compare-retry') as HTMLButtonElement
+const compareResultEl = document.getElementById('compare-result') as HTMLDivElement
+const compareTray = document.getElementById('compare-tray') as HTMLDivElement
+const compareCounter = document.getElementById('compare-counter') as HTMLSpanElement
+const compareSlots = document.getElementById('compare-slots') as HTMLUListElement
+const compareSubmitBtn = document.getElementById('compare-submit') as HTMLButtonElement
+const compareResetBtn = document.getElementById('compare-reset') as HTMLButtonElement
+const compareHint = document.getElementById('compare-hint') as HTMLParagraphElement
+const compareHiddenNotice = document.getElementById('compare-hidden-notice') as HTMLDivElement
+const compareHiddenText = document.getElementById('compare-hidden-text') as HTMLSpanElement
+const compareHiddenResetBtn = document.getElementById('compare-hidden-reset') as HTMLButtonElement
+const compareFeedback = document.getElementById('compare-feedback') as HTMLParagraphElement
+
+type CompareView =
+  | { kind: 'idle' }
+  | { kind: 'loading' }
+  | { kind: 'error'; code: string }
+  | { kind: 'success'; results: [CompareItem, CompareItem] }
+
+let selection: SelectionState = initialSelection()
+let compareView: CompareView = { kind: 'idle' }
+let compareToken = 0 // invalidates in-flight responses after reset / selection change
+
+function carById(id: string): FeaturedCar | undefined {
+  return FEATURED_CARS.find((c) => c.id === id)
+}
+
+function setFeedback(text: string): void {
+  compareFeedback.textContent = text
+}
+
+function hiddenText(n: number): string {
+  return n === 1 ? '1 выбран скрыт фильтром' : `${n} выбранных скрыты фильтром`
+}
+
+// Reflect selection onto rendered cards in place (keeps keyboard focus on the toggled button).
+function syncCardSelection(): void {
+  const busy = compareView.kind === 'loading'
+  featuredGrid.querySelectorAll<HTMLElement>('.car-card[data-car-id]').forEach((card) => {
+    const id = card.dataset.carId as string
+    const car = carById(id)
+    const on = isSelected(selection, id)
+    const btn = card.querySelector<HTMLButtonElement>('.select-btn')
+    card.classList.toggle('is-selected', on)
+    if (!btn || !car) return
+    btn.setAttribute('aria-pressed', String(on))
+    btn.setAttribute('aria-label', `${on ? 'Снять с сравнения' : 'Выбрать для сравнения'}: ${car.title}`)
+    btn.disabled = busy
+    btn.innerHTML = on
+      ? '<span class="select-icon" aria-hidden="true">✓</span><span>Выбрано · Снять</span>'
+      : '<span class="select-icon" aria-hidden="true">+</span><span>Сравнить</span>'
+  })
+}
+
+function updateTray(): void {
+  const n = selection.ids.length
+  const busy = compareView.kind === 'loading'
+  compareTray.hidden = n === 0
+  compareCounter.textContent = `${n} / ${MAX_SELECTED}`
+  compareSlots.innerHTML = selection.ids
+    .map((id, i) => `<li class="tray-slot"><span class="tray-slot-no" aria-hidden="true">${i + 1}</span>${carById(id)?.title ?? id}</li>`)
+    .join('')
+  compareSubmitBtn.disabled = !canCompare(selection) || busy
+  compareHint.hidden = canCompare(selection)
+  compareResetBtn.disabled = false
+
+  const hidden = hiddenSelectedIds(selection, activeList.map((c) => c.id)).length
+  compareHiddenNotice.hidden = hidden === 0
+  compareHiddenText.textContent = hidden === 0 ? '' : hiddenText(hidden)
+}
+
+function renderComparePanel(): void {
+  const v = compareView
+  comparePanel.hidden = v.kind === 'idle'
+  comparePanel.setAttribute('aria-busy', String(v.kind === 'loading'))
+  compareLoading.hidden = v.kind !== 'loading'
+  compareError.hidden = v.kind !== 'error'
+  compareResultEl.hidden = v.kind !== 'success'
+  if (v.kind === 'error') compareErrorText.textContent = mapCompareErrorToMessage(v.code)
+  if (v.kind === 'success') compareResultEl.innerHTML = renderResult(v.results)
+  syncCardSelection()
+  updateTray()
+}
+
+function renderResult(results: [CompareItem, CompareItem]): string {
+  const [a, b] = results
+  // Highlight only the strictly cheaper total from backend values; a tie highlights nothing.
+  const cheaperId = a.totalImportJpy === b.totalImportJpy ? null : a.totalImportJpy < b.totalImportJpy ? a.carId : b.carId
+  const col = (r: CompareItem): string => {
+    const car = carById(r.carId)
+    const cheaper = r.carId === cheaperId
+    return `
+      <article class="compare-col${cheaper ? ' is-cheaper' : ''}" data-car-id="${r.carId}">
+        ${cheaper ? '<p class="cheaper-badge"><span aria-hidden="true">★</span> Меньший итог импорта</p>' : ''}
+        ${car ? `<div class="compare-media"><img src="${car.img}" alt="${car.title}" /></div>` : ''}
+        <h4 class="compare-car-title">${car?.title ?? r.carId}</h4>
+        <dl class="spec-list">
+          <div><dt>Двигатель</dt><dd>${car?.engine ?? '—'}</dd></div>
+          <div><dt>Привод</dt><dd>${car?.drivetrain ?? '—'}</dd></div>
+        </dl>
+        <dl class="cost-list">
+          <div><dt>Цена покупки</dt><dd>${formatJpy(r.purchasePriceJpy)}</dd></div>
+          <div><dt>Аукционный сбор</dt><dd>${formatJpy(r.auctionFeeJpy)}</dd></div>
+          <div><dt>Доставка</dt><dd>${formatJpy(r.shippingJpy)}</dd></div>
+          <div class="cost-total"><dt><span class="jp-label" lang="ja">合計</span> Итого импорт</dt><dd>${formatJpy(r.totalImportJpy)}</dd></div>
+        </dl>
+      </article>`
+  }
+  return col(a) + col(b)
+}
+
+function clearCompareOutcome(): void {
+  compareToken++
+  compareView = { kind: 'idle' }
+}
+
+async function runCompare(): Promise<void> {
+  const pair = selectedPair(selection)
+  if (!pair || compareView.kind === 'loading') return // explicit, 2/2 only, no duplicate submit
+  const token = ++compareToken
+  compareView = { kind: 'loading' }
+  setFeedback('')
+  renderComparePanel()
+  const out = await compareCars(pair)
+  if (token !== compareToken) return // reset happened meanwhile
+  compareView = out.ok ? { kind: 'success', results: out.results } : { kind: 'error', code: out.code }
+  renderComparePanel()
+  if (!out.ok) compareRetryBtn.focus()
+}
+
+featuredGrid.addEventListener('click', (e) => {
+  const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-select-id]')
+  if (!btn || compareView.kind === 'loading') return
+  const res = toggleSelection(selection, btn.dataset.selectId as string)
+  if (res.outcome === 'rejected') {
+    setFeedback('Выбрано максимум 2 автомобиля')
+    return
+  }
+  selection = res.state
+  setFeedback('')
+  if (compareView.kind !== 'idle') clearCompareOutcome() // result/error belongs to the previous pair
+  renderComparePanel()
+})
+
+compareSubmitBtn.addEventListener('click', () => void runCompare())
+compareRetryBtn.addEventListener('click', () => void runCompare())
+
+compareResetBtn.addEventListener('click', () => {
+  selection = resetSelection()
+  clearCompareOutcome()
+  setFeedback('')
+  renderComparePanel() // budget filter is intentionally untouched
+})
+
+compareHiddenResetBtn.addEventListener('click', () => {
+  budgetResetBtn.click()
+  const first = featuredGrid.querySelector<HTMLElement>('.select-btn')
+  first?.focus()
+})
 
 let activeList: FeaturedCar[] = FEATURED_CARS.slice()
 
