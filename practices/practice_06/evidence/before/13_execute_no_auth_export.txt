@@ -1,0 +1,8 @@
+=== E-03/I-06/L-07: /assistant/execute without any token or auth — export_profiles ===
+HTTP/1.0 200 OK
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 13:02:13 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 188
+
+[{"id": 1, "name": "TEST_ALICE", "email": "alice@example.invalid", "address": "TEST_ADDRESS_A"}, {"id": 2, "name": "TEST_BOB", "email": "bob@example.invalid", "address": "TEST_ADDRESS_B"}]
