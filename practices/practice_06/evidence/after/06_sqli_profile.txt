@@ -1,0 +1,19 @@
+=== T-02: SQL injection /profile?id (after fix) ===
+-- baseline id=1 --
+[{"id": 1, "name": "TEST_ALICE", "email": "alice@example.invalid", "address": "TEST_ADDRESS_A"}]
+-- injection: id=0 OR 1=1 (expect 400, must NOT return both profiles) --
+HTTP/1.0 400 Bad Request
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 18:43:52 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 23
+
+{"error": "invalid id"}
+-- injection with quote (expect 400, no SQL error leaked) --
+HTTP/1.0 400 Bad Request
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 18:43:52 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 23
+
+{"error": "invalid id"}

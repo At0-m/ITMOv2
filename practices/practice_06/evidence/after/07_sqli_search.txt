@@ -1,0 +1,29 @@
+=== T-03: SQL injection /search?q (UNION attempt, after fix) ===
+-- baseline q=ALICE (own name, customer scoped) --
+[{"id": 1, "name": "TEST_ALICE", "email": "alice@example.invalid", "address": "TEST_ADDRESS_A"}]
+-- q=BOB as alice (customer scoped to own id, expect empty despite literal match) --
+[]
+-- UNION injection attempt (expect [] or treated as literal text, no INJECTED row, no error) --
+HTTP/1.0 200 OK
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 18:43:52 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 2
+
+[]
+-- quote only (expect 200 empty list, not 500 SQL error) --
+HTTP/1.0 200 OK
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 18:43:52 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 2
+
+[]
+-- staff can search across all profiles (legitimate, UNION attempt still rejected) --
+HTTP/1.0 200 OK
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 18:43:52 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 2
+
+[]

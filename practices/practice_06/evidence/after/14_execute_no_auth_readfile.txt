@@ -1,0 +1,25 @@
+=== E-03/E-05/I-03: read_file via /assistant/execute, attacker-supplied path (after fix) ===
+-- no token, bob's receipt requested (expect 401) --
+HTTP/1.0 401 Unauthorized
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 18:45:02 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 27
+
+{"error": "login required"}
+-- alice session, decision asks for bob's receipt (expect 200 but content is ALICE's own, path argument ignored) --
+HTTP/1.0 200 OK
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 18:45:02 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 50
+
+{"content": "TEST_ALICE receipt: chair, 5000 RUB"}
+-- alice session, decision asks for private operator note (expect 200 but content is ALICE's own receipt, not the secret) --
+HTTP/1.0 200 OK
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 18:45:02 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 50
+
+{"content": "TEST_ALICE receipt: chair, 5000 RUB"}

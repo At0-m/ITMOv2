@@ -1,0 +1,3 @@
+=== T-05: stored XSS via /reviews -> /reviews/view (after fix) ===
+{"saved": true}
+<html><body><p>&lt;script&gt;document.title=&quot;XSS_PROOF&quot;&lt;/script&gt;</p></body></html>

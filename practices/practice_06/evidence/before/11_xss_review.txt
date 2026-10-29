@@ -1,0 +1,3 @@
+=== T-05: stored XSS via /reviews -> /reviews/view ===
+{"saved": true}
+<html><body><p>anon review no auth</p><p><script>document.title="XSS_PROOF"</script></p></body></html>
