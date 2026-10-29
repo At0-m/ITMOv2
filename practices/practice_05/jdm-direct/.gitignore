@@ -30,3 +30,8 @@ dist-ssr
 # Local Claude Code integration
 .claude/
 .specify/integration.json
+
+# Local Claude/Spec Kit integration files
+.claude/
+.specify/integration.json
+.specify/integrations/claude.manifest.json

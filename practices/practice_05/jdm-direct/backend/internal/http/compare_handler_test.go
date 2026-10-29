@@ -75,6 +75,10 @@ func TestCompareHandler_MissingOrNullCarIDsIsMalformed(t *testing.T) {
         {"missing carIds", `{}`, errcodes.MalformedRequest},
         {"null carIds", `{"carIds":null}`, errcodes.MalformedRequest},
         {"empty carIds", `{"carIds":[]}`, errcodes.WrongCarCount},
+        {"null element", `{"carIds":[null,"r34"]}`, errcodes.MalformedRequest},
+        {"number element", `{"carIds":[1,"r34"]}`, errcodes.MalformedRequest},
+        {"priority count over duplicate/unknown", `{"carIds":["r34","r34","unknown"]}`, errcodes.WrongCarCount},
+        {"duplicate before unknown", `{"carIds":["unknown","unknown"]}`, errcodes.DuplicateCarIDs},
     }
     for _, tc := range cases {
         t.Run(tc.name, func(t *testing.T) {
@@ -99,4 +103,14 @@ func TestCORSHeaders(t *testing.T) {
     // POST also sets CORS headers
     w = perform(map[string]any{"carIds": []string{"r34","supra"}})
     if w.Header().Get("Access-Control-Allow-Origin") == "" { t.Fatalf("missing CORS on POST") }
+}
+
+func TestCompareHandler_ReversedOrderPreserved(t *testing.T) {
+    w := perform(map[string]any{"carIds": []string{"supra", "r34"}})
+    if w.Code != http.StatusOK { t.Fatalf("status=%d", w.Code) }
+    var body struct{ Results []struct{ CarID string `json:"carId"` } `json:"results"` }
+    if err := json.Unmarshal(w.Body.Bytes(), &body); err != nil { t.Fatal(err) }
+    if len(body.Results) != 2 || body.Results[0].CarID != "supra" || body.Results[1].CarID != "r34" {
+        t.Fatalf("order not preserved: %+v", body.Results)
+    }
 }

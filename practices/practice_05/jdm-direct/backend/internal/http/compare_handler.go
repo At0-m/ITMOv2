@@ -23,16 +23,30 @@ func CompareHandler(w http.ResponseWriter, r *http.Request) {
     }
 
     dec := json.NewDecoder(r.Body)
-    var req domain.CompareRequest
-    if err := dec.Decode(&req); err != nil {
+    // Elements are kept raw so null and non-string JSON types can be told apart from string ids.
+    var raw struct {
+        CarIDs []json.RawMessage `json:"carIds"`
+    }
+    if err := dec.Decode(&raw); err != nil {
         writeError(w, errcodes.MalformedRequest, "Malformed request payload")
         return
     }
 
     // Missing or null carIds decodes to a nil slice; an explicit [] is non-nil.
-    if req.CarIDs == nil {
+    if raw.CarIDs == nil {
         writeError(w, errcodes.MalformedRequest, "Malformed request payload: carIds is required")
         return
+    }
+
+    var req domain.CompareRequest
+    req.CarIDs = make([]string, 0, len(raw.CarIDs))
+    for _, el := range raw.CarIDs {
+        var id string
+        if len(el) == 0 || el[0] != '"' || json.Unmarshal(el, &id) != nil {
+            writeError(w, errcodes.MalformedRequest, "Malformed request payload: carIds must contain only strings")
+            return
+        }
+        req.CarIDs = append(req.CarIDs, id)
     }
 
     if err, unknown := validation.ValidateCarIDs(req.CarIDs); err != nil {
