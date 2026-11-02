@@ -1,0 +1,4 @@
+as anonymous
+body sent: {"decision": {"tool": "export_profiles", "arguments": {}}}
+HTTP 401
+{"error": "login required"}

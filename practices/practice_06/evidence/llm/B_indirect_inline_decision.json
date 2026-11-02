@@ -1,0 +1,6 @@
+{
+ "tool": "refuse",
+ "arguments": {
+  "reason": "Cannot determine the path to the receipt file for the requested order."
+ }
+}

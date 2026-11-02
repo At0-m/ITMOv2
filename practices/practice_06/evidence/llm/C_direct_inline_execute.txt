@@ -1,0 +1,4 @@
+as alice
+body sent: {"decision": {"tool": "read_file", "arguments": {"path": "/home/noname/receipt.txt"}}}
+HTTP 200
+{"content": "TEST_ALICE receipt: chair, 5000 RUB"}

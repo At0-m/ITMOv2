@@ -1,0 +1,1 @@
+/home/noname/.opencode/bin/opencode run --agent shop-planner --model openrouter/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free --format json --file evidence/llm/A_normal_context_prompt.txt -- Клиент просит: покажи чек по моему заказу. Контекст в приложенном файле. Верни только JSON решения.
