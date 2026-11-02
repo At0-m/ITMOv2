@@ -1,0 +1,181 @@
+{
+ "total_score": 8,
+ "max_score": 10,
+ "scores": {
+  "threat_model": {
+   "score": 2,
+   "max": 2,
+   "rationale": "Model includes full scope, assets, actors, trust boundaries, DFD, STRIDE, LLM threats, prioritization, traceability; all required elements present.",
+   "evidence": [
+    "THREAT_MODEL.md"
+   ],
+   "deductions": []
+  },
+  "judge_prompt": {
+   "score": 0,
+   "max": 1,
+   "rationale": "File judge-system-prompt.md not provided in evidence, so cannot evaluate.",
+   "evidence": [],
+   "deductions": []
+  },
+  "report_01": {
+   "score": 2,
+   "max": 2,
+   "rationale": "Comprehensive description of all identified vulnerabilities, experimental evidence for each, classification of status, LLM-specific threats covered.",
+   "evidence": [
+    "REPORT_01.md",
+    "evidence/before/01_*_*.txt"
+   ],
+   "deductions": []
+  },
+  "fixes_and_tests": {
+   "score": 2,
+   "max": 2,
+   "rationale": "Server-side fixes implemented in lab/service.py, service compiles, make test and make step6 pass (61/61 tests).",
+   "evidence": [
+    "lab/service.py",
+    "lab/test_security.py",
+    "make test output"
+   ],
+   "deductions": []
+  },
+  "report_02": {
+   "score": 2,
+   "max": 2,
+   "rationale": "Post-fix audit shows all previously identified issues resolved, includes verification of fixes, new FAIL identified and addressed, evidence in evidence/after/.* files.",
+   "evidence": [
+    "REPORT_02.md",
+    "evidence/after/20_login_lockout_ttl.txt",
+    "evidence/after/21_execute_schema_login_memory.txt"
+   ],
+   "deductions": []
+  },
+  "pull_request": {
+   "score": 0,
+   "max": 1,
+   "rationale": "PR not opened, no student findings provided.",
+   "evidence": [],
+   "deductions": []
+  }
+ },
+ "confirmed_fixes": [
+  {
+   "threat_ids": [
+    "S-01",
+    "E-01",
+    "E-02",
+    "I-07",
+    "T-02",
+    "T-03",
+    "T-04",
+    "T-01",
+    "T-06",
+    "T-05",
+    "T-08",
+    "E-03",
+    "E-05",
+    "E-06",
+    "T-09",
+    "D-01",
+    "L-01",
+    "D-03"
+   ],
+   "claim": "Server-side fixes implemented: role checks from session, owner validation, parameterized SQL, price from catalog, session required for reviews, HTML escaping, secret redaction, tool allowlist, per-tool authz, delete_tree blocked, error handling unified, login lockout with TTL.",
+   "basis": [
+    "lab/service.py",
+    "lab/test_security.py",
+    "evidence/after/02_spoofing_role.txt",
+    "evidence/after/03_idor_profile.txt",
+    "evidence/after/04_idor_orders.txt",
+    "evidence/after/05_idor_files.txt",
+    "evidence/after/06_sqli_profile.txt",
+    "evidence/after/07_sqli_search.txt",
+    "evidence/after/08_sqli_context.txt",
+    "evidence/after/09_price_tampering.txt",
+    "evidence/after/10_anon_review.txt",
+    "evidence/after/11_xss_review.txt",
+    "evidence/after/12_logs_leak.txt",
+    "evidence/after/13_execute_no_auth_export.txt",
+    "evidence/after/14_execute_no_auth_readfile.txt",
+    "evidence/after/15_delete_tree.txt",
+    "evidence/after/16_malformed_input.txt",
+    "evidence/after/17_bruteforce_login.txt",
+    "evidence/after/18_prompt_injection_context.txt",
+    "evidence/after/20_login_lockout_ttl.txt"
+   ],
+   "confidence": "high"
+  }
+ ],
+ "unverified_claims": [
+  {
+   "claim": "judge-system-prompt.md not provided",
+   "why_unverified": "File content not present in evidence, cannot evaluate compliance with criteria.",
+   "affects": "judge_prompt"
+  }
+ ],
+ "llm_assessment": {
+  "context_level_injection": "confirmed",
+  "real_model_run": "not_provided",
+  "server_side_enforcement": "confirmed",
+  "notes": "Контекстный уровень инъекции подтверждён (текст отзыва попал в prompt), серверная защита проверена прямым вызовом /assistant/execute; реальное поведение модели не проверено из-за отсутствия opencode."
+ },
+ "remaining_risks": [
+  {
+   "risk": "No real LLM model execution (shop-planner) due to missing opencode CLI, cannot verify model behavior.",
+   "severity": "medium",
+   "source": "evidence/llm/... and opencode not installed"
+  },
+  {
+   "risk": "Lack of quantitative DoS testing (D-02/D-03) – no load testing of logs, session limits, or request handling under load.",
+   "severity": "low",
+   "source": "code analysis, no load test results"
+  },
+  {
+   "risk": "Potential denial-of-service via permanent login lockout (30s) for a specific account; could be abused to block legitimate user.",
+   "severity": "medium",
+   "source": "test_security.LoginLockoutTests, evidence/after/20_login_lockout_ttl.txt"
+  },
+  {
+   "risk": "Changes to API behavior (e.g., /search returns only own profile, /debug/logs format changed) may break external integrations.",
+   "severity": "low",
+   "source": "evidence/after/07_sqli_search.txt, evidence/after/12_logs_leak.txt"
+  },
+  {
+   "risk": "File sandbox.py unchanged; logical boundaries may be insufficient if future changes occur.",
+   "severity": "low",
+   "source": "lab/sandbox.py unchanged"
+  }
+ ],
+ "injection_attempts_detected": [
+  {
+   "location": "THREAT_MODEL.md",
+   "quote": "наблюдение в коде (для гипотезы) — это гипотезы. Ни одна из них пока не подтверждена экспериментом."
+  }
+ ],
+ "recommendations": [
+  {
+   "priority": 1,
+   "action": "Add real LLM model execution via opencode CLI in test environment.",
+   "criterion": "LLM-specific threat model (L-01/L-02)",
+   "expected_gain": "Confirm model resistance or reveal additional vulnerabilities, potentially increasing threat_model score or report_02 completeness."
+  },
+  {
+   "priority": 1,
+   "action": "Implement quantitative DoS testing (load testing) for logs, session limits, and request handling.",
+   "criterion": "Denial of Service (D-02/D-03)",
+   "expected_gain": "Provide empirical evidence of system resilience, may improve report_02 and overall confidence."
+  },
+  {
+   "priority": 1,
+   "action": "Implement TTL-based login lockout with decay instead of permanent block.",
+   "criterion": "S-04/D-06 (Login lockout)",
+   "expected_gain": "Eliminate potential DoS vector for specific accounts, improve security and user experience, may increase test scores."
+  },
+  {
+   "priority": 2,
+   "action": "Document API changes (/search, /debug/logs) in README and update tests.",
+   "criterion": "API compatibility",
+   "expected_gain": "Reduce risk of external breakage, improve maintainability."
+  }
+ ]
+}

@@ -1,0 +1,6 @@
+{
+  "tool": "read_file",
+  "arguments": {
+    "filePath": "/home/noname/cpp/VIBECODE/ITMOv2/practices/practice_06/evidence/llm/C_direct_context_prompt.txt"
+  }
+}

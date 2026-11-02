@@ -1,0 +1,4 @@
+opencode --version: 1.18.34
+openrouter/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free
+openrouter/qwen/qwen3.8-omni-flash
+session ses_e64433724ffebY5tCaAot2IIAr: assistant providerID=openrouter modelID=nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free (from opencode export)

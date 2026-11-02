@@ -1,0 +1,6 @@
+=== S-04: brute-force login, no lockout after repeated failures (3 attempts shown) ===
+HTTP/1.0 401 Unauthorized
+HTTP/1.0 401 Unauthorized
+HTTP/1.0 401 Unauthorized
+-- correct password still works right after (no lockout) --
+HTTP/1.0 200 OK

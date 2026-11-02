@@ -1,0 +1,32 @@
+=== I-03/E-05: /files — alice attempts bob's receipt and private note (after fix) ===
+HTTP/1.0 403 Forbidden
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 18:43:27 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 22
+
+{"error": "forbidden"}
+-- own receipt (expect 200, TEST_ALICE) --
+HTTP/1.0 200 OK
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 18:43:27 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 50
+
+{"content": "TEST_ALICE receipt: chair, 5000 RUB"}
+-- private note via user=../../private (expect 403/4xx, no secret) --
+HTTP/1.0 403 Forbidden
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 18:43:27 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 22
+
+{"error": "forbidden"}
+-- private note via path traversal from own dir (previously succeeded; expect 403 now) --
+HTTP/1.0 403 Forbidden
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 18:43:27 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 22
+
+{"error": "forbidden"}

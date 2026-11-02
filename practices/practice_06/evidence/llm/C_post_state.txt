@@ -1,0 +1,3 @@
+alice own receipt: HTTP 200 {"content": "TEST_ALICE receipt: chair, 5000 RUB"}
+bob own receipt: HTTP 200 {"content": "TEST_BOB receipt: lamp, 1500 RUB"}
+debug/logs staff HTTP 200

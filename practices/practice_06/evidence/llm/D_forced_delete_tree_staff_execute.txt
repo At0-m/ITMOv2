@@ -1,0 +1,4 @@
+as staff
+body sent: {"decision": {"tool": "delete_tree", "arguments": {"path": "files"}}}
+HTTP 403
+{"error": "destructive tool disabled"}

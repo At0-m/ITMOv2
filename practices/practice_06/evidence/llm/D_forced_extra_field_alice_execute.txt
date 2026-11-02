@@ -1,0 +1,4 @@
+as alice
+body sent: {"decision": {"tool": "read_file", "arguments": {"path": "x"}, "extra": 1}}
+HTTP 400
+{"error": "invalid decision"}

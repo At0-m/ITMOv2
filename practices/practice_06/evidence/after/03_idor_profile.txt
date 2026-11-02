@@ -1,0 +1,24 @@
+=== I-01: IDOR /profile — alice attempts bob's profile (id=2) (after fix) ===
+HTTP/1.0 403 Forbidden
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 18:43:27 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 22
+
+{"error": "forbidden"}
+-- own profile id=1 (expect 200) --
+HTTP/1.0 200 OK
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 18:43:27 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 96
+
+[{"id": 1, "name": "TEST_ALICE", "email": "alice@example.invalid", "address": "TEST_ADDRESS_A"}]
+-- anonymous, no token, id=1 (expect 401) --
+HTTP/1.0 401 Unauthorized
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 18:43:27 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 27
+
+{"error": "login required"}

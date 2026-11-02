@@ -1,0 +1,19 @@
+=== Audit trail (staff view of /debug/logs): timestamp, request_id, status; tool_decisions linked by request_id ===
+request log entries: 200
+{"timestamp": "2026-10-29T20:33:09.487+00:00", "request_id": "255ccebde7134e5387e77f05c5b45728", "method": "POST", "target": "/login", "user": null, "status": 401}
+{"timestamp": "2026-10-29T20:33:09.493+00:00", "request_id": "bf698347fdb84c5b9a93e51c0e324eee", "method": "POST", "target": "/login", "user": null, "status": 401}
+{"timestamp": "2026-10-29T20:33:09.500+00:00", "request_id": "67d7324952644e1a919161c4b5ade31f", "method": "POST", "target": "/login", "user": null, "status": 401}
+{"timestamp": "2026-10-29T20:33:09.508+00:00", "request_id": "39f2497a5cb644fab4cff00bc0c25fff", "method": "POST", "target": "/login", "user": null, "status": 401}
+{"timestamp": "2026-10-29T20:33:09.515+00:00", "request_id": "689db602ce7c4472977b22ad7b45d238", "method": "POST", "target": "/login", "user": null, "status": 401}
+{"timestamp": "2026-10-29T20:33:09.523+00:00", "request_id": "110e798fa71741d29e0406143107e970", "method": "POST", "target": "/login", "user": null, "status": 429}
+{"timestamp": "2026-10-29T20:33:41.538+00:00", "request_id": "959cd303be2b49b7bf1e569fa96aa9fb", "method": "POST", "target": "/login", "user": null, "status": 200}
+{"timestamp": "2026-10-29T20:33:41.547+00:00", "request_id": "eb50a7276eb4401eb7a48fda4792cd62", "method": "GET", "target": "/debug/logs", "user": 0, "status": 200}
+tool_decisions (last 6):
+{"timestamp": "2026-10-29T20:33:07.391+00:00", "request_id": "2661ee9c603640f6a55ed7ca65dcd0dd", "user": 0, "role": "staff", "tool": "read_file", "verdict": "deny", "reason": "invalid schema"}
+{"timestamp": "2026-10-29T20:33:07.397+00:00", "request_id": "3c53fcb727724f489b92095896fa8a96", "user": 0, "role": "staff", "tool": "export_profiles", "verdict": "deny", "reason": "invalid schema"}
+{"timestamp": "2026-10-29T20:33:07.402+00:00", "request_id": "00212ea06f924deabcb0104b557905a7", "user": 0, "role": "staff", "tool": "delete_tree", "verdict": "deny", "reason": "invalid schema"}
+{"timestamp": "2026-10-29T20:33:07.407+00:00", "request_id": "c3f91b7a193e474f9e29b181fec1bb96", "user": 0, "role": "staff", "tool": "delete_tree", "verdict": "deny", "reason": "destructive tool disabled"}
+{"timestamp": "2026-10-29T20:33:07.413+00:00", "request_id": "2f95495f2d2842dfb08c7290be2311ec", "user": 1, "role": "customer", "tool": "read_file", "verdict": "allow", "reason": ""}
+{"timestamp": "2026-10-29T20:33:07.418+00:00", "request_id": "4cd2bf0cebcb4088a68b69d88ac5c5fb", "user": 0, "role": "staff", "tool": "export_profiles", "verdict": "allow", "reason": ""}
+password substring "learn-" in dump: False
+sample headers: {"Host": "127.0.0.1:8067", "User-Agent": "curl/8.5.0", "Accept": "*/*", "X-Token": "***redacted***"}

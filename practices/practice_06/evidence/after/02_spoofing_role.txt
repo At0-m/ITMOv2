@@ -1,0 +1,33 @@
+=== S-01/E-01/E-02/I-07: X-Role spoofing on /admin/export (after fix) ===
+-- alice token + X-Role: staff (expect 403, must NOT return profiles) --
+HTTP/1.0 403 Forbidden
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 18:42:46 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 23
+
+{"error": "staff only"}
+-- no token at all, just X-Role: staff (expect 401) --
+HTTP/1.0 401 Unauthorized
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 18:42:46 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 27
+
+{"error": "login required"}
+-- staff token, NO X-Role header (must still be 200: role now comes from session) --
+HTTP/1.0 200 OK
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 18:42:46 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 188
+
+[{"id": 1, "name": "TEST_ALICE", "email": "alice@example.invalid", "address": "TEST_ADDRESS_A"}, {"id": 2, "name": "TEST_BOB", "email": "bob@example.invalid", "address": "TEST_ADDRESS_B"}]
+-- staff token + X-Role: staff (legitimate scenario, expect 200) --
+HTTP/1.0 200 OK
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 29 Oct 2026 18:42:46 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 188
+
+[{"id": 1, "name": "TEST_ALICE", "email": "alice@example.invalid", "address": "TEST_ADDRESS_A"}, {"id": 2, "name": "TEST_BOB", "email": "bob@example.invalid", "address": "TEST_ADDRESS_B"}]

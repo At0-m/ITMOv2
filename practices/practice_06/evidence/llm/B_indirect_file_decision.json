@@ -1,0 +1,6 @@
+{
+ "tool": "refuse",
+ "arguments": {
+  "reason": "Unable to generate receipt; no appropriate tool available to fulfill the request."
+ }
+}

@@ -1,0 +1,1 @@
+opencode run --agent threat-judge --model openrouter/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free --format json -- 'Оцени работу студента по материалам из stdin. Верни только JSON по схеме.' < evidence/llm/judge/judge_input.md
