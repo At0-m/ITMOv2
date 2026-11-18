@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Bug Desk — прототип очереди багов</title>
+<style>
+  :root {
+    --canvas: #f5f7fb;
+    --paper: #fff;
+    --ink: #151f35;
+    --muted: #52627c;
+    --line: #dbe2ee;
+    --primary: #4140b6;
+    --primary-dark: #343297;
+    --primary-tint: #eeedff;
+    --error: #a42640;
+    --error-tint: #fff0f3;
+    --success: #196749;
+    --success-tint: #e8f7ef;
+    --radius: 14px;
+    --space: 8px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--canvas);
+    color: var(--ink);
+    font: 15px/1.5 system-ui, sans-serif;
+  }
+  button, input, textarea, select { font: inherit; }
+  button { cursor: pointer; }
+  button:disabled { cursor: wait; opacity: .65; }
+  :focus-visible { outline: 3px solid #7773e6; outline-offset: 3px; }
+  [hidden] { display: none !important; }
+  .shell { width: min(100% - 48px, 1000px); margin-inline: auto; }
+  .top { background: #152039; color: #fff; }
+  .top .shell { min-height: 68px; display: flex; align-items: center; gap: 12px; }
+  .mark {
+    display: grid; place-items: center; width: 34px; height: 34px;
+    border-radius: 10px; background: #d8d5ff; color: #35308f; font-weight: 800;
+  }
+  .brand { font-size: 17px; font-weight: 700; letter-spacing: -.015em; }
+  main { padding-block: 56px 32px; }
+  .intro { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: 28px; }
+  h1, h2, p { margin: 0; }
+  h1 { font-size: clamp(32px, 5vw, 48px); line-height: 1.08; letter-spacing: -.05em; }
+  h2 { font-size: 20px; letter-spacing: -.025em; }
+  .subtitle { margin-top: 10px; color: var(--muted); }
+  .button {
+    min-height: 44px; padding: 9px 15px; border: 1px solid transparent;
+    border-radius: 9px; font-weight: 650;
+  }
+  .primary { background: var(--primary); color: white; }
+  .primary:hover:not(:disabled) { background: var(--primary-dark); }
+  .secondary { color: var(--ink); border-color: var(--line); background: var(--paper); }
+  .secondary:hover { background: var(--canvas); }
+  .queue { border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); overflow: hidden; }
+  .queue-head { padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .count { color: var(--muted); font-size: 14px; }
+  .tickets { list-style: none; margin: 0; padding: 0; }
+  .ticket { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 18px 22px; border-top: 1px solid #e6ebf4; }
+  .ticket-id { color: var(--muted); font: 12px/1.5 ui-monospace, monospace; }
+  .ticket h3 { margin: 3px 0 0; font-size: 16px; overflow-wrap: anywhere; }
+  .ticket p { margin-top: 2px; color: var(--muted); font-size: 14px; overflow-wrap: anywhere; }
+  .chip { padding: 4px 9px; border-radius: 7px; font-size: 13px; font-weight: 650; white-space: nowrap; }
+  .high { background: #ffe8ee; color: #9a2041; }
+  .medium { background: #fff0d1; color: #775000; }
+  .low { background: #eef1f9; color: #455475; }
+  .empty { border-top: 1px solid #e6ebf4; padding: 38px 22px; text-align: center; }
+  .empty p { color: var(--muted); margin-top: 4px; }
+  .notice { border-radius: 9px; padding: 10px 12px; }
+  .success { background: var(--success-tint); color: var(--success); margin-bottom: 16px; }
+  .server-error { background: var(--error-tint); color: var(--error); }
+  dialog {
+    border: 1px solid var(--line); border-radius: var(--radius); padding: 0;
+    width: min(100% - 32px, 510px); max-height: calc(100% - 32px);
+    color: var(--ink); box-shadow: 0 20px 60px #15203938;
+  }
+  dialog::backdrop { background: #15203985; }
+  form { display: grid; gap: calc(2 * var(--space)); padding: calc(3 * var(--space)); }
+  .dialog-head p { color: var(--muted); margin-top: 4px; }
+  .field { display: grid; gap: 5px; }
+  .field label { font-weight: 650; }
+  input, textarea, select {
+    width: 100%; min-height: 44px; padding: 9px 11px; background: var(--paper);
+    color: var(--ink); border: 1px solid #abb8ce; border-radius: 8px;
+  }
+  textarea { min-height: 88px; resize: vertical; }
+  [aria-invalid="true"] { border-color: var(--error); }
+  .field-error { color: var(--error); font-size: 13px; }
+  .actions { display: flex; justify-content: end; gap: 8px; flex-wrap: wrap; }
+  .loading { color: var(--muted); }
+  .demo { margin-top: 24px; padding-top: 14px; border-top: 1px dashed #bac5d8; }
+  .demo summary { color: var(--muted); cursor: pointer; font-size: 14px; width: fit-content; }
+  .demo-controls { margin-top: 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .demo-controls select { width: auto; max-width: 100%; }
+  @media (max-width: 560px) {
+    .shell { width: calc(100% - 32px); }
+    main { padding-top: 32px; }
+    .intro { align-items: start; flex-direction: column; }
+    .queue-head, .ticket { padding-inline: 14px; }
+    .ticket { grid-template-columns: minmax(0, 1fr); justify-items: start; gap: 8px; }
+    form { padding: 18px; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="shell">
+    <span class="mark" aria-hidden="true">B</span>
+    <span class="brand">Bug Desk</span>
+  </div>
+</header>
+<main class="shell">
+  <div class="intro">
+    <div>
+      <h1>Очередь багов</h1>
+      <p class="subtitle">Регистрируйте дефекты и передавайте их команде разработки.</p>
+    </div>
+    <button class="button primary" id="open" type="button">+ Создать баг-репорт</button>
+  </div>
+  <p class="notice success" id="success" role="status" hidden></p>
+  <section class="queue" aria-labelledby="queue-title">
+    <div class="queue-head">
+      <h2 id="queue-title">Баг-репорты</h2>
+      <span class="count" id="count"></span>
+    </div>
+    <ul class="tickets" id="tickets"></ul>
+    <div class="empty" id="empty" hidden>
+      <strong>Баг-репортов пока нет</strong>
+      <p>Создайте первый баг-репорт, чтобы он появился в очереди.</p>
+    </div>
+  </section>
+  <details class="demo">
+    <summary>Данные для демонстрации прототипа</summary>
+    <div class="demo-controls">
+      <label for="scenario">Сценарий</label>
+      <select id="scenario">
+        <option value="normal">Обычная очередь</option>
+        <option value="empty">Пустая очередь</option>
+        <option value="slow">Медленная отправка</option>
+        <option value="error">Ошибка при первой отправке</option>
+      </select>
+    </div>
+  </details>
+</main>
+
+<dialog id="create" aria-labelledby="dialog-title">
+  <form id="create-form" novalidate>
+    <div class="dialog-head">
+      <h2 id="dialog-title">Новый баг-репорт</h2>
+      <p>Опишите проблему и укажите её приоритет.</p>
+    </div>
+    <div class="field">
+      <label for="title">Название</label>
+      <input id="title" name="title" maxlength="100" required aria-describedby="title-error" autofocus placeholder="Например, фильтр сбрасывается после обновления">
+      <span class="field-error" id="title-error" hidden></span>
+    </div>
+    <div class="field">
+      <label for="description">Описание</label>
+      <textarea id="description" name="description" maxlength="500" required aria-describedby="description-error" placeholder="Шаги воспроизведения и фактический результат"></textarea>
+      <span class="field-error" id="description-error" hidden></span>
+    </div>
+    <div class="field">
+      <label for="priority">Приоритет</label>
+      <select id="priority" name="priority">
+        <option value="low">Низкий</option>
+        <option value="medium" selected>Средний</option>
+        <option value="high">Высокий</option>
+      </select>
+    </div>
+    <p class="notice server-error" id="server-error" role="alert" hidden></p>
+    <p class="loading" id="loading" role="status" hidden>Создаём баг-репорт…</p>
+    <div class="actions">
+      <button class="button secondary" id="cancel" type="button">Отмена</button>
+      <button class="button primary" id="submit" type="submit">Создать</button>
+    </div>
+  </form>
+</dialog>
+<script>
+  const samples = [
+    {id: 103, title: 'Экспорт отчёта сбрасывает фильтр периода', description: 'В CSV попадают строки за все даты вместо выбранного периода.', priority: 'high'},
+    {id: 102, title: 'Список заявок прыгает после обновления', description: 'При обновлении теряется позиция прокрутки.', priority: 'medium'},
+    {id: 101, title: 'Длинный заголовок выходит за границы карточки', description: 'Воспроизводится на экранах шириной до 400 px.', priority: 'low'}
+  ];
+  const priorities = { low: 'Низкий', medium: 'Средний', high: 'Высокий' };
+  const get = (id) => document.getElementById(id);
+  const dialog = get('create');
+  const form = get('create-form');
+  const title = get('title');
+  const description = get('description');
+  const priority = get('priority');
+  const demo = get('scenario');
+  const submit = get('submit');
+  const cancel = get('cancel');
+  const success = get('success');
+  const serverError = get('server-error');
+  const loading = get('loading');
+  let tickets = [...samples];
+  let nextId = 104;
+  let pending = false;
+  let failNext = false;
+
+  function renderTickets() {
+    const items = tickets.map((ticket) => {
+      const row = document.createElement('li');
+      row.className = 'ticket';
+      const content = document.createElement('div');
+      const key = document.createElement('span');
+      key.className = 'ticket-id';
+      key.textContent = 'BUG-' + ticket.id;
+      const heading = document.createElement('h3');
+      heading.textContent = ticket.title;
+      const detail = document.createElement('p');
+      detail.textContent = ticket.description;
+      content.append(key, heading, detail);
+      const badge = document.createElement('span');
+      badge.className = 'chip ' + ticket.priority;
+      badge.textContent = priorities[ticket.priority];
+      row.append(content, badge);
+      return row;
+    });
+    get('tickets').replaceChildren(...items);
+    get('count').textContent = String(tickets.length);
+    get('empty').hidden = tickets.length > 0;
+  }
+
+  function fieldError(field, message = '') {
+    const error = get(field.id + '-error');
+    error.textContent = message;
+    error.hidden = !message;
+    if (message) field.setAttribute('aria-invalid', 'true');
+    else field.removeAttribute('aria-invalid');
+  }
+
+  function setPending(value) {
+    pending = value;
+    for (const element of [title, description, priority, cancel, submit]) {
+      element.disabled = value;
+    }
+    loading.hidden = !value;
+    submit.textContent = value ? 'Отправляем…' : 'Создать';
+  }
+
+  get('open').addEventListener('click', () => {
+    form.reset();
+    fieldError(title);
+    fieldError(description);
+    serverError.hidden = true;
+    success.hidden = true;
+    dialog.showModal();
+  });
+  cancel.addEventListener('click', () => dialog.close());
+  dialog.addEventListener('cancel', (event) => {
+    if (pending) event.preventDefault();
+  });
+
+  for (const field of [title, description]) {
+    field.addEventListener('input', () => fieldError(field));
+  }
+
+  demo.addEventListener('change', () => {
+    tickets = demo.value === 'empty' ? [] : [...samples];
+    failNext = demo.value === 'error';
+    nextId = 104;
+    success.hidden = true;
+    renderTickets();
+  });
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (pending) return;
+    serverError.hidden = true;
+    const subject = title.value.trim();
+    const detail = description.value.trim();
+    fieldError(title, !subject ? 'Введите название.' : subject.length < 5 ? 'Название должно содержать не менее 5 символов.' : '');
+    fieldError(description, !detail ? 'Введите описание.' : detail.length < 10 ? 'Описание должно содержать не менее 10 символов.' : '');
+    const invalid = form.querySelector('[aria-invalid="true"]');
+    if (invalid) {
+      invalid.focus();
+      return;
+    }
+    const selectedPriority = priority.value;
+    const delay = demo.value === 'slow' ? 2600 : 650;
+    setPending(true);
+    await new Promise((resolve) => setTimeout(resolve, delay));
+    setPending(false);
+    if (failNext) {
+      failNext = false;
+      serverError.textContent = 'Не удалось создать баг-репорт. Данные сохранены в форме. Попробуйте ещё раз.';
+      serverError.hidden = false;
+      submit.textContent = 'Повторить';
+      submit.focus();
+      return;
+    }
+    const ticket = { id: nextId++, title: subject, description: detail, priority: selectedPriority };
+    tickets.unshift(ticket);
+    renderTickets();
+    dialog.close();
+    success.textContent = 'Баг-репорт BUG-' + ticket.id + ' создан и добавлен в очередь.';
+    success.hidden = false;
+  });
+
+  renderTickets();
+</script>
+</body>
+</html>
