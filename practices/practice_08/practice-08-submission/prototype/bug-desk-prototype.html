@@ -6,104 +6,124 @@
 <meta name="color-scheme" content="light">
 <title>Bug Desk — прототип очереди багов</title>
 <style>
+  /* Те же семантические токены и размеры, что в client/src/theme.ts. */
   :root {
-    --canvas: #f5f7fb;
-    --paper: #fff;
-    --ink: #151f35;
-    --muted: #52627c;
-    --line: #dbe2ee;
-    --primary: #4140b6;
-    --primary-dark: #343297;
-    --primary-tint: #eeedff;
-    --error: #a42640;
-    --error-tint: #fff0f3;
-    --success: #196749;
-    --success-tint: #e8f7ef;
-    --radius: 14px;
-    --space: 8px;
+    --canvas:#ffffff; --paper:#fff; --surface-muted:#F2F1F0; --ink:#000000; --muted:#5C5C59;
+    --line:#E3E3E3; --line-soft:#E3E3E3; --input-border:#adadaa; --input-hover:#70706d;
+    --primary:#00AAFF; --primary-dark:#0099F7; --primary-pressed:#0085CE; --primary-tint:#CFEDFF; --focus:#0072B3;
+    --error:#FF4053; --error-tint:#FFE8EC; --success:#006B39; --success-tint:#E6F9EE;
+    --disabled-bg:#E3E3E3; --disabled-ink:#696d7b; --space:8px;
   }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    background: var(--canvas);
-    color: var(--ink);
-    font: 15px/1.5 system-ui, sans-serif;
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--canvas); color:var(--ink); font:15px/1.5 system-ui,sans-serif; }
+  button,input,textarea,select { font:inherit; }
+  button { cursor:pointer; }
+  button:disabled { cursor:default; background:var(--disabled-bg); color:var(--disabled-ink); }
+  :focus-visible { outline:3px solid var(--focus); outline-offset:3px; }
+  [hidden] { display:none !important; }
+  .shell { width:min(100% - 48px,1000px); margin-inline:auto; }
+  .top { background:#262624; color:#fff; }
+  .top .shell { height:40px; display:flex; align-items:center; gap:12px; }
+  .mark { display:grid; place-items:center; width:28px; height:28px; border-radius:8px; background:#CFEDFF; color:#0072B3; font-weight:800; }
+  .brand { font-size:17px; font-weight:700; letter-spacing:-.015em; }
+  main { padding-block:32px; }
+  .intro { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:24px; }
+  .heading { display:flex; align-items:center; gap:12px; }
+  h1,h2,p { margin:0; }
+  h1 { font-size:32px; line-height:1.25; letter-spacing:-.035em; }
+  h2 { font-size:26px; line-height:1.3; letter-spacing:-.025em; }
+  .count { min-width:28px; padding:0 8px; border-radius:6px; background:var(--surface-muted); color:var(--muted); text-align:center; font-size:14px; font-weight:600; }
+  .button { min-height:44px; padding:9px 16px; border:1px solid transparent; border-radius:8px; font-weight:600; }
+  .primary { background:var(--primary); color:#000; }
+  .primary:hover:not(:disabled) { background:var(--primary-dark); }
+  .primary:active:not(:disabled) { background:var(--primary-pressed); }
+  .plus { margin-right:8px; font-size:20px; line-height:1; vertical-align:-1px; }
+  .secondary { color:var(--ink); border-color:var(--line); background:var(--paper); }
+  .secondary:hover:not(:disabled) { background:var(--surface-muted); border-color:var(--input-border); }
+  .secondary:active:not(:disabled) { background:var(--line); }
+  .tickets { list-style:none; margin:0; padding:0; }
+  .ticket { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:6px 24px; padding:16px 0; border-top:1px solid var(--line-soft); }
+  .ticket-id { grid-area:2 / 1; align-self:center; color:var(--muted); font:13px/1.5 ui-monospace,monospace; overflow-wrap:anywhere; }
+  .ticket-content { grid-area:1 / 1; min-width:0; overflow-wrap:anywhere; }
+  .ticket h2 { margin:0; font-size:18px; line-height:1.3; letter-spacing:-.02em; font-weight:650; }
+  .ticket p { margin-top:4px; color:var(--muted); font-size:14px; }
+  .chip { grid-area:1 / 2; justify-self:end; height:26px; padding:3px 9px; border-radius:6px; font-size:13px; font-weight:600; white-space:nowrap; }
+  .high { background:#FFE8EC; color:#A61B34; }
+  .medium { background:#E9DDFD; color:#5626A4; }
+  .low { background:#E6F9EE; color:#006B39; }
+  .empty { padding:48px 16px; text-align:center; }
+  .empty strong { font-weight:600; }
+  .notice { display:flex; align-items:start; gap:12px; border-radius:8px; padding:14px 12px; font-size:14px; overflow-wrap:anywhere; }
+  .notice::before { content:'!'; display:grid; place-items:center; flex:none; border:2px solid currentColor; border-radius:50%; width:20px; height:20px; font-weight:700; line-height:1; }
+  .success { border-left:4px solid #04E061; background:var(--success-tint); color:var(--success); margin-bottom:16px; }
+  .success::before { content:'✓'; }
+  .server-error { background:var(--error-tint); color:#A61B34; }
+  .queue-error { padding:24px; }
+  .queue-error .button { margin-top:8px; color:inherit; background:transparent; }
+  .queue-loading { padding:40px; display:flex; justify-content:center; align-items:center; gap:12px; color:var(--muted); }
+  .spinner { width:20px; height:20px; flex:none; border:2px solid var(--primary-tint); border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  dialog { border:1px solid var(--line); border-radius:16px; padding:0; width:min(100% - 32px,520px); max-height:calc(100% - 32px); color:var(--ink); background:var(--paper); box-shadow:0 20px 60px #16161626; overflow:hidden; }
+  dialog::backdrop { background:#16161666; }
+  form { display:flex; flex-direction:column; max-height:calc(100dvh - 34px); min-height:0; }
+  .dialog-head { flex:none; padding:24px 24px 20px; }
+  .dialog-content { padding:0 24px 16px; overflow-y:auto; min-height:0; }
+  .field { display:grid; gap:4px; }
+  .field + .field { margin-top:4px; }
+  .field label { font-size:14px; font-weight:600; padding-bottom:1px; }
+  input,textarea,select { width:100%; min-height:46px; padding:10px 12px; background:var(--paper); color:var(--ink); border:1px solid var(--input-border); border-radius:8px; }
+  input:hover,textarea:hover,select:hover { border-color:var(--input-hover); }
+  input:focus,textarea:focus,select:focus { outline:none; border-color:var(--focus); box-shadow:inset 0 0 0 2px var(--focus); }
+  input:disabled,textarea:disabled,select:disabled { background:var(--surface-muted); color:var(--disabled-ink); }
+  textarea { height:88px; resize:vertical; }
+  [aria-invalid="true"] { border-color:var(--error); }
+  [aria-invalid="true"]:focus { border-color:var(--error); box-shadow:inset 0 0 0 2px var(--error); }
+  .field-error { color:#A61B34; font-size:13px; min-height:22px; padding-top:3px; }
+  .actions { flex:none; display:flex; justify-content:end; gap:8px; flex-wrap:wrap; padding:16px 24px; border-top:1px solid var(--line-soft); }
+  .loading { color:var(--muted); }
+  .dialog-content .notice { margin-top:8px; }
+  .demo { margin-top:24px; padding-top:14px; border-top:1px dashed var(--input-border); }
+  .demo summary { color:var(--muted); cursor:pointer; font-size:14px; width:fit-content; }
+  .demo-controls { margin-top:12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .demo-controls select { width:auto; max-width:100%; }
+  @media (max-width:559.95px) {
+    .shell { width:calc(100% - 32px); }
+    main { padding-top:24px; }
+    h1 { font-size:26px; }
+    .intro { align-items:stretch; flex-direction:column; }
+    .ticket { grid-template-columns:auto minmax(0,1fr); gap:8px 12px; }
+    .ticket-content { grid-column:1 / -1; }
+    .chip { grid-area:2 / 2; justify-self:start; }
+    .dialog-head { padding:20px 16px; }
+    .dialog-content { padding:0 16px 16px; }
+    .actions { padding:16px; }
+    .actions .button { flex:1; }
+    .queue-error { padding:16px; }
   }
-  button, input, textarea, select { font: inherit; }
-  button { cursor: pointer; }
-  button:disabled { cursor: wait; opacity: .65; }
-  :focus-visible { outline: 3px solid #7773e6; outline-offset: 3px; }
-  [hidden] { display: none !important; }
-  .shell { width: min(100% - 48px, 1000px); margin-inline: auto; }
-  .top { background: #152039; color: #fff; }
-  .top .shell { min-height: 68px; display: flex; align-items: center; gap: 12px; }
-  .mark {
-    display: grid; place-items: center; width: 34px; height: 34px;
-    border-radius: 10px; background: #d8d5ff; color: #35308f; font-weight: 800;
-  }
-  .brand { font-size: 17px; font-weight: 700; letter-spacing: -.015em; }
-  main { padding-block: 56px 32px; }
-  .intro { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: 28px; }
-  h1, h2, p { margin: 0; }
-  h1 { font-size: clamp(32px, 5vw, 48px); line-height: 1.08; letter-spacing: -.05em; }
-  h2 { font-size: 20px; letter-spacing: -.025em; }
-  .subtitle { margin-top: 10px; color: var(--muted); }
-  .button {
-    min-height: 44px; padding: 9px 15px; border: 1px solid transparent;
-    border-radius: 9px; font-weight: 650;
-  }
-  .primary { background: var(--primary); color: white; }
-  .primary:hover:not(:disabled) { background: var(--primary-dark); }
-  .secondary { color: var(--ink); border-color: var(--line); background: var(--paper); }
-  .secondary:hover { background: var(--canvas); }
-  .queue { border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); overflow: hidden; }
-  .queue-head { padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  .count { color: var(--muted); font-size: 14px; }
-  .tickets { list-style: none; margin: 0; padding: 0; }
-  .ticket { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 18px 22px; border-top: 1px solid #e6ebf4; }
-  .ticket-id { color: var(--muted); font: 12px/1.5 ui-monospace, monospace; }
-  .ticket h3 { margin: 3px 0 0; font-size: 16px; overflow-wrap: anywhere; }
-  .ticket p { margin-top: 2px; color: var(--muted); font-size: 14px; overflow-wrap: anywhere; }
-  .chip { padding: 4px 9px; border-radius: 7px; font-size: 13px; font-weight: 650; white-space: nowrap; }
-  .high { background: #ffe8ee; color: #9a2041; }
-  .medium { background: #fff0d1; color: #775000; }
-  .low { background: #eef1f9; color: #455475; }
-  .empty { border-top: 1px solid #e6ebf4; padding: 38px 22px; text-align: center; }
-  .empty p { color: var(--muted); margin-top: 4px; }
-  .notice { border-radius: 9px; padding: 10px 12px; }
-  .success { background: var(--success-tint); color: var(--success); margin-bottom: 16px; }
-  .server-error { background: var(--error-tint); color: var(--error); }
-  dialog {
-    border: 1px solid var(--line); border-radius: var(--radius); padding: 0;
-    width: min(100% - 32px, 510px); max-height: calc(100% - 32px);
-    color: var(--ink); box-shadow: 0 20px 60px #15203938;
-  }
-  dialog::backdrop { background: #15203985; }
-  form { display: grid; gap: calc(2 * var(--space)); padding: calc(3 * var(--space)); }
-  .dialog-head p { color: var(--muted); margin-top: 4px; }
-  .field { display: grid; gap: 5px; }
-  .field label { font-weight: 650; }
-  input, textarea, select {
-    width: 100%; min-height: 44px; padding: 9px 11px; background: var(--paper);
-    color: var(--ink); border: 1px solid #abb8ce; border-radius: 8px;
-  }
-  textarea { min-height: 88px; resize: vertical; }
-  [aria-invalid="true"] { border-color: var(--error); }
-  .field-error { color: var(--error); font-size: 13px; }
-  .actions { display: flex; justify-content: end; gap: 8px; flex-wrap: wrap; }
-  .loading { color: var(--muted); }
-  .demo { margin-top: 24px; padding-top: 14px; border-top: 1px dashed #bac5d8; }
-  .demo summary { color: var(--muted); cursor: pointer; font-size: 14px; width: fit-content; }
-  .demo-controls { margin-top: 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .demo-controls select { width: auto; max-width: 100%; }
-  @media (max-width: 560px) {
-    .shell { width: calc(100% - 32px); }
-    main { padding-top: 32px; }
-    .intro { align-items: start; flex-direction: column; }
-    .queue-head, .ticket { padding-inline: 14px; }
-    .ticket { grid-template-columns: minmax(0, 1fr); justify-items: start; gap: 8px; }
-    form { padding: 18px; }
-  }
+  @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms !important; transition-duration:.01ms !important; } }
+.queue-tools { margin-bottom: 16px; }
+.queue-search { display: flex; align-items: center; gap: 10px; padding: 0 12px; height: 44px; border: 1px solid #adadaa; border-radius: 8px; color: #5c5c59; }
+.queue-search:focus-within { outline: 2px solid #0072b3; outline-offset: -1px; }
+.queue-search input { flex: 1; width: 0; min-width: 0; padding: 0; height: 100%; border: 0; outline: none; color: #000; background: transparent; font: inherit; }
+.queue-search input:focus-visible { outline: none; }
+.queue-search button { border: 0; background: transparent; color: inherit; font-size: 22px; width: 36px; height: 36px; cursor: pointer; }
+.priority-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px; margin-top: 12px; }
+.priority-grid button { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 48px; border: 2px solid transparent; border-radius: 8px; padding: 8px 14px; font: 600 14px/1.4 system-ui,sans-serif; cursor: pointer; }
+.priority-grid button[aria-pressed="true"] { border-color: currentColor; }
+.priority-grid strong { font-size: 20px; font-variant-numeric: tabular-nums; }
+.ticket-open { text-align: left; font: inherit; color: inherit; letter-spacing: inherit; overflow-wrap: anywhere; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.ticket-open:hover, .ticket-open:focus-visible { text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width:559.95px) { .priority-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+
+.queue-search input:focus { box-shadow:none; }
+.priority-grid .all { background:var(--surface-muted); color:var(--ink); }
+#details { margin:0 0 0 auto; width:min(460px,100vw); height:100dvh; max-height:100dvh; max-width:100vw; overflow:auto; padding:24px; border:0; border-radius:0; }
+.detail-bar { display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--line); padding-bottom:16px; margin-bottom:24px; }
+#details h2 { font-size:22px; overflow-wrap:anywhere; }
+#details .chip { display:inline-block; margin-top:16px; }
+#detail-body { margin:24px 0; white-space:pre-wrap; overflow-wrap:anywhere; }
+#detail-date { color:var(--muted); font-size:14px; }
+@media(max-width:559.95px){ #details { width:100vw; padding:16px; } }
 </style>
 </head>
 <body>
@@ -114,23 +134,28 @@
   </div>
 </header>
 <main class="shell">
-  <div class="intro">
-    <div>
-      <h1>Очередь багов</h1>
-      <p class="subtitle">Регистрируйте дефекты и передавайте их команде разработки.</p>
+  <section aria-labelledby="queue-title">
+    <div class="intro">
+      <div class="heading"><h1 id="queue-title">Очередь багов</h1><span class="count" id="count"></span></div>
+      <button class="button primary" id="open" type="button"><span class="plus" aria-hidden="true">+</span>Создать баг-репорт</button>
     </div>
-    <button class="button primary" id="open" type="button">+ Создать баг-репорт</button>
-  </div>
-  <p class="notice success" id="success" role="status" hidden></p>
-  <section class="queue" aria-labelledby="queue-title">
-    <div class="queue-head">
-      <h2 id="queue-title">Баг-репорты</h2>
-      <span class="count" id="count"></span>
-    </div>
-    <ul class="tickets" id="tickets"></ul>
-    <div class="empty" id="empty" hidden>
-      <strong>Баг-репортов пока нет</strong>
-      <p>Создайте первый баг-репорт, чтобы он появился в очереди.</p>
+    <p class="notice success" id="success" role="status" hidden></p>
+    <div class="queue" id="queue">
+      <div class="queue-tools" id="tools">
+        <div class="queue-search" role="search">
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10" cy="10" r="6.5"/><path d="m15 15 5 5"/></svg>
+          <input id="query" aria-label="Найти баг-репорт" placeholder="Найти баг-репорт">
+          <button id="clear" aria-label="Очистить поиск" hidden>×</button>
+        </div>
+        <div class="priority-grid" role="group" aria-label="Фильтр по приоритету" id="tiles"></div>
+      </div>
+      <div class="empty" id="no-match" role="status" hidden><p>Ничего не найдено</p><button class="button secondary" id="reset">Сбросить фильтры</button></div>
+      <ul class="tickets" id="tickets" aria-label="Баг-репорты"></ul>
+      <div class="empty" id="empty" role="status" hidden><strong>Баг-репортов пока нет</strong></div>
+      <div class="queue-loading" id="queue-loading" role="status" hidden><span class="spinner" aria-hidden="true"></span>Загружаем очередь…</div>
+      <div class="queue-error" id="queue-error" hidden>
+        <div class="notice server-error" role="alert"><div><strong>Не удалось загрузить очередь.</strong><p>Нет связи с сервером.</p><button class="button" id="retry" type="button">Повторить</button></div></div>
+      </div>
     </div>
   </section>
   <details class="demo">
@@ -140,6 +165,8 @@
       <select id="scenario">
         <option value="normal">Обычная очередь</option>
         <option value="empty">Пустая очередь</option>
+        <option value="loading">Загрузка очереди</option>
+        <option value="get-error">Ошибка загрузки</option>
         <option value="slow">Медленная отправка</option>
         <option value="error">Ошибка при первой отправке</option>
       </select>
@@ -147,21 +174,26 @@
   </details>
 </main>
 
+<dialog id="details" aria-labelledby="detail-title">
+  <div class="detail-bar"><span class="ticket-id" id="detail-id"></span><button class="button secondary" id="detail-close">Закрыть</button></div>
+  <h2 id="detail-title"></h2><span class="chip" id="detail-chip"></span>
+  <p id="detail-body"></p><p id="detail-date"></p>
+</dialog>
 <dialog id="create" aria-labelledby="dialog-title">
   <form id="create-form" novalidate>
     <div class="dialog-head">
       <h2 id="dialog-title">Новый баг-репорт</h2>
-      <p>Опишите проблему и укажите её приоритет.</p>
     </div>
+    <div class="dialog-content">
     <div class="field">
-      <label for="title">Название</label>
+      <label for="title">Название <span aria-hidden="true">*</span></label>
       <input id="title" name="title" maxlength="100" required aria-describedby="title-error" autofocus placeholder="Например, фильтр сбрасывается после обновления">
-      <span class="field-error" id="title-error" hidden></span>
+      <span class="field-error" id="title-error"></span>
     </div>
     <div class="field">
-      <label for="description">Описание</label>
+      <label for="description">Описание <span aria-hidden="true">*</span></label>
       <textarea id="description" name="description" maxlength="500" required aria-describedby="description-error" placeholder="Шаги воспроизведения и фактический результат"></textarea>
-      <span class="field-error" id="description-error" hidden></span>
+      <span class="field-error" id="description-error"></span>
     </div>
     <div class="field">
       <label for="priority">Приоритет</label>
@@ -170,9 +202,11 @@
         <option value="medium" selected>Средний</option>
         <option value="high">Высокий</option>
       </select>
+      <span class="field-error" aria-hidden="true"></span>
     </div>
     <p class="notice server-error" id="server-error" role="alert" hidden></p>
     <p class="loading" id="loading" role="status" hidden>Создаём баг-репорт…</p>
+    </div>
     <div class="actions">
       <button class="button secondary" id="cancel" type="button">Отмена</button>
       <button class="button primary" id="submit" type="submit">Создать</button>
@@ -181,10 +215,56 @@
 </dialog>
 <script>
   const samples = [
-    {id: 103, title: 'Экспорт отчёта сбрасывает фильтр периода', description: 'В CSV попадают строки за все даты вместо выбранного периода.', priority: 'high'},
-    {id: 102, title: 'Список заявок прыгает после обновления', description: 'При обновлении теряется позиция прокрутки.', priority: 'medium'},
-    {id: 101, title: 'Длинный заголовок выходит за границы карточки', description: 'Воспроизводится на экранах шириной до 400 px.', priority: 'low'}
-  ];
+  {
+    "id": 107,
+    "title": "При экспорте сбрасывается фильтр периода",
+    "description": "В CSV попадают строки за все даты вместо выбранного периода.",
+    "priority": "high",
+    "createdAt": "2026-11-22T09:45:00Z"
+  },
+  {
+    "id": 106,
+    "title": "Не сохраняется черновик отчёта",
+    "description": "После возврата из предпросмотра исчезают введённые значения.",
+    "priority": "high",
+    "createdAt": "2026-11-21T09:45:00Z"
+  },
+  {
+    "id": 105,
+    "title": "Список заявок прыгает после обновления",
+    "description": "При обновлении теряется позиция прокрутки.",
+    "priority": "medium",
+    "createdAt": "2026-11-20T09:45:00Z"
+  },
+  {
+    "id": 104,
+    "title": "Подпись переносится на узком экране",
+    "description": "На ширине 360 px единица измерения оказывается на отдельной строке.",
+    "priority": "low",
+    "createdAt": "2026-11-19T09:45:00Z"
+  },
+  {
+    "id": 103,
+    "title": "В уведомлении неверное время",
+    "description": "Время события отображается без учёта часового пояса.",
+    "priority": "medium",
+    "createdAt": "2026-11-18T09:45:00Z"
+  },
+  {
+    "id": 102,
+    "title": "Не обновляется счётчик вложений",
+    "description": "После удаления файла счётчик сохраняет прежнее значение.",
+    "priority": "medium",
+    "createdAt": "2026-11-17T09:45:00Z"
+  },
+  {
+    "id": 101,
+    "title": "Лишний пробел в названии вкладки",
+    "description": "В конце названия появляется пробел при копировании.",
+    "priority": "low",
+    "createdAt": "2026-11-16T09:45:00Z"
+  }
+];
   const priorities = { low: 'Низкий', medium: 'Средний', high: 'Высокий' };
   const get = (id) => document.getElementById(id);
   const dialog = get('create');
@@ -199,38 +279,80 @@
   const serverError = get('server-error');
   const loading = get('loading');
   let tickets = [...samples];
-  let nextId = 104;
+  let nextId = 108;
   let pending = false;
   let failNext = false;
 
+  let active = 'all';
+  const query = get('query');
+  for (const key of ['all', 'high', 'medium', 'low']) {
+    const tile = document.createElement('button');
+    tile.className = key;
+    tile.dataset.priority = key;
+    tile.append(document.createTextNode(priorities[key] || 'Все'), document.createElement('strong'));
+    tile.onclick = () => { active = key; renderTickets(); };
+    get('tiles').append(tile);
+  }
+  function resetFilters() { active = 'all'; query.value = ''; }
+  query.oninput = renderTickets;
+  get('clear').onclick = () => { query.value = ''; renderTickets(); query.focus(); };
+  get('reset').onclick = () => { resetFilters(); renderTickets(); query.focus(); };
+  get('detail-close').onclick = () => get('details').close();
+
+  function openDetails(ticket) {
+    get('detail-id').textContent = 'BUG-' + ticket.id;
+    get('detail-title').textContent = ticket.title;
+    get('detail-chip').className = 'chip ' + ticket.priority;
+    get('detail-chip').textContent = 'Приоритет: ' + priorities[ticket.priority];
+    get('detail-body').textContent = ticket.description;
+    get('detail-date').textContent = 'Дата создания · ' + new Intl.DateTimeFormat('ru-RU',
+      { dateStyle: 'long', timeStyle: 'short' }).format(new Date(ticket.createdAt));
+    get('details').showModal();
+  }
   function renderTickets() {
-    const items = tickets.map((ticket) => {
+    const term = query.value.trim().toLocaleLowerCase('ru');
+    const visible = tickets.filter(t => (active === 'all' || active === t.priority) &&
+      [t.title, t.description, 'BUG-' + t.id].some(v => v.toLocaleLowerCase('ru').includes(term)));
+    for (const tile of get('tiles').children) {
+      const key = tile.dataset.priority;
+      tile.lastChild.textContent = key === 'all' ? tickets.length : tickets.filter(t => t.priority === key).length;
+      tile.setAttribute('aria-pressed', String(active === key));
+    }
+    get('clear').hidden = !query.value;
+    get('no-match').hidden = visible.length > 0 || (!term && active === 'all');
+    const items = visible.map((ticket) => {
       const row = document.createElement('li');
       row.className = 'ticket';
       const content = document.createElement('div');
+      content.className = 'ticket-content';
       const key = document.createElement('span');
       key.className = 'ticket-id';
       key.textContent = 'BUG-' + ticket.id;
-      const heading = document.createElement('h3');
-      heading.textContent = ticket.title;
+      const heading = document.createElement('h2');
+      const opener = document.createElement('button');
+      opener.className = 'ticket-open';
+      opener.textContent = ticket.title;
+      opener.onclick = () => openDetails(ticket);
+      heading.append(opener);
       const detail = document.createElement('p');
       detail.textContent = ticket.description;
-      content.append(key, heading, detail);
+      content.append(heading, detail);
       const badge = document.createElement('span');
       badge.className = 'chip ' + ticket.priority;
       badge.textContent = priorities[ticket.priority];
-      row.append(content, badge);
+      badge.setAttribute('aria-label', 'Приоритет: ' + priorities[ticket.priority]);
+      row.append(content, key, badge);
       return row;
     });
     get('tickets').replaceChildren(...items);
     get('count').textContent = String(tickets.length);
-    get('empty').hidden = tickets.length > 0;
+    get('count').setAttribute('aria-label', 'Всего баг-репортов: ' + tickets.length);
+    get('empty').hidden = tickets.length > 0 || !get('no-match').hidden;
   }
 
   function fieldError(field, message = '') {
     const error = get(field.id + '-error');
     error.textContent = message;
-    error.hidden = !message;
     if (message) field.setAttribute('aria-invalid', 'true');
     else field.removeAttribute('aria-invalid');
   }
@@ -250,11 +372,20 @@
     fieldError(description);
     serverError.hidden = true;
     success.hidden = true;
+    submit.textContent = 'Создать';
     dialog.showModal();
+    title.focus();
   });
   cancel.addEventListener('click', () => dialog.close());
   dialog.addEventListener('cancel', (event) => {
     if (pending) event.preventDefault();
+  });
+
+  dialog.addEventListener('close', () => { form.reset(); fieldError(title); fieldError(description); serverError.hidden = true; get('open').focus(); });
+  dialog.addEventListener('click', (event) => {
+    if (event.target !== dialog || pending) return;
+    const r = dialog.getBoundingClientRect();
+    if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) dialog.close();
   });
 
   for (const field of [title, description]) {
@@ -262,12 +393,26 @@
   }
 
   demo.addEventListener('change', () => {
+    resetFilters();
     tickets = demo.value === 'empty' ? [] : [...samples];
     failNext = demo.value === 'error';
-    nextId = 104;
+    nextId = 108;
     success.hidden = true;
     renderTickets();
+    setQueueState(demo.value);
   });
+  function setQueueState(state) {
+    const ready = !['loading', 'get-error'].includes(state);
+    get('count').hidden = !ready;
+    get('tools').hidden = !ready;
+    if (!ready) get('no-match').hidden = true;
+    get('tickets').hidden = !ready;
+    get('empty').hidden = !ready || tickets.length > 0;
+    get('queue-loading').hidden = state !== 'loading';
+    get('queue-error').hidden = state !== 'get-error';
+    get('queue').setAttribute('aria-busy', String(state === 'loading'));
+  }
+  get('retry').addEventListener('click', () => { demo.value = 'normal'; renderTickets(); setQueueState('normal'); });
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -275,8 +420,8 @@
     serverError.hidden = true;
     const subject = title.value.trim();
     const detail = description.value.trim();
-    fieldError(title, !subject ? 'Введите название.' : subject.length < 5 ? 'Название должно содержать не менее 5 символов.' : '');
-    fieldError(description, !detail ? 'Введите описание.' : detail.length < 10 ? 'Описание должно содержать не менее 10 символов.' : '');
+    fieldError(title, !subject ? 'Введите название.' : subject.length < 5 || subject.length > 100 ? 'Название должно содержать от 5 до 100 символов.' : '');
+    fieldError(description, !detail ? 'Введите описание.' : detail.length < 10 || detail.length > 500 ? 'Описание должно содержать от 10 до 500 символов.' : '');
     const invalid = form.querySelector('[aria-invalid="true"]');
     if (invalid) {
       invalid.focus();
@@ -295,9 +440,11 @@
       submit.focus();
       return;
     }
-    const ticket = { id: nextId++, title: subject, description: detail, priority: selectedPriority };
+    const ticket = { id: nextId++, title: subject, description: detail, priority: selectedPriority, createdAt: new Date().toISOString() };
+    resetFilters();
     tickets.unshift(ticket);
     renderTickets();
+    setQueueState('normal');
     dialog.close();
     success.textContent = 'Баг-репорт BUG-' + ticket.id + ' создан и добавлен в очередь.';
     success.hidden = false;
